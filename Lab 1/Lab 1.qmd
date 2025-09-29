@@ -64,7 +64,7 @@ aes(
 )
 ```
 
-This box and whisker plot shows us some interesting things, that aren't as directly apparant in the bubble chart. Firstly, its easier to see which continent have lower incomes. It is also easier to see the dispursion of life expectancies eithin each continent. On the contrery, the bubble chart shows us some more informaiotn. It is easier to see the trend of income vs life expectancy. Additionally, the bubble chart incorporates the population. 
+This box and whisker plot shows us some interesting things that aren't as directly apparent in the bubble chart. Firstly, it's easier to see which continent has lower incomes. It is also easier to see the dispersion of life expectancies within each continent. On the contrary, the bubble chart shows us some more information. It is easier to see the trend of income vs life expectancy. Additionally, the bubble chart incorporates the population. 
 
 ## Task 2
 2.1 
@@ -130,10 +130,11 @@ aes(
 )
 ```
 
-This violin chart is similar to the box and whisker chart where I think it makes it really easy to see which regions have higher values on the x-axis which in thuis case is exports. Other than that, I find the bubble chart to show the data better. 
+This violin chart is similar to the box and whisker chart where I think it makes it really easy to see which regions have higher values on the x-axis which in this case is exports. Other than that, I find the bubble chart to show the data better. 
+
 ## Task 3
 3.1 
-The aesthetics being used here are internet users on the x-axis, gdp per capita on the y-axis, the colors are based on continent, and the size of each bubble is based on income usage.
+The aesthetics being used here are internet users on the x-axis, gdp per capita on the y-axis, the colors are based on continent, and the size of each bubble is based on income.
 
 ```{python}
 #| echo: true
