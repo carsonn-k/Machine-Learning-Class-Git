@@ -1,0 +1,187 @@
+---
+title: Lab 1
+echo: false
+
+format:
+  html:
+    embed-resources: true
+---
+
+## Task 1
+1.1 
+The aesthetics being used here are income on the x-axis, life expectancy on the y-axis, the colors are based on continent, and the size of each bubble is based on population.  
+
+```{python}
+
+#| echo: true
+#| code-fold: true
+#| warning: false
+#| message: false
+
+import pandas as pd
+
+df = pd.read_csv("/Users/kellogg/Downloads/Cal Poly 5th Year/Machine-Learning-Class-Git/Lab 1/Data/q1data.csv")
+
+from plotnine import *
+
+(ggplot(df,
+aes(
+  x = "income",
+  y = "life_exp",
+  color = "four_regions",
+  size = "population",
+))
++ geom_point(alpha = 0.6, stroke = 1)
++ scale_x_log10(limits = (0, 128000),
+    breaks = [500, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 128000],
+    labels = ["500", "1000", "2000", "4000", "8000", "16k", "32k", "64k", "12k"])
++ scale_y_continuous(limits = (15, 90), breaks = list(range(20,91,10)))
++ scale_color_manual(values = {'americas': 'green', 'asia': 'red', 'africa': 'deepskyblue', 'europe': 'gold'})
++ scale_size(range = (0, 15))
++ theme_bw()
++ theme(panel_grid_minor=element_blank(), figure_size=(8, 4))
++ theme(legend_position = 'none')
++ labs(x = "Income", y='Life Expectancy')
++ annotate("text", x = 7000, y = 45, label = "2010", size = 180, alpha = 0.1, ha = "center", va = "center")
+
+)
+```
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| warning: false
+#| message: false
+
+(ggplot(df,
+aes(
+  x = "income",
+  y = "life_exp",
+  fill = "four_regions"))
++ geom_boxplot()
+)
+```
+
+This box and whisker plot shows us some interesting things, that aren't as directly apparant in the bubble chart. Firstly, its easier to see which continent have lower incomes. It is also easier to see the dispursion of life expectancies eithin each continent. On the contrery, the bubble chart shows us some more informaiotn. It is easier to see the trend of income vs life expectancy. Additionally, the bubble chart incorporates the population. 
+
+## Task 2
+2.1 
+The aesthetics being used here are exports on the x-axis, imports on the y-axis, the colors are based on continent, and the size of each bubble is based on energy usage.
+
+
+import pandas as pd
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| warning: false
+#| message: false
+
+import pandas as pd
+df2 = pd.read_csv("/Users/kellogg/Downloads/Cal Poly 5th Year/Machine-Learning-Class-Git/Lab 1/Data/q2data.csv")
+
+def convert_energy(val):
+    val = str(val)
+    if val.endswith("k"):
+        return float(val[:-1]) * 1000
+    return float(val)
+
+df2["energy"] = df2["energy"].apply(convert_energy).astype(float)
+
+
+from plotnine import *
+
+(ggplot(df2,
+aes(
+  x = "exports",
+  y = "imports",
+  color = "four_regions",
+  size = "energy",
+))
++ geom_point(alpha = 0.6, stroke = 1)
++ scale_x_continuous(limits = (0, 240), breaks = list(range(0,240,20)))
++ scale_y_continuous(limits = (0, 450), breaks = list(range(0,401,50)))
++ scale_color_manual(values = {'americas': 'green', 'asia': 'red', 'africa': 'deepskyblue', 'europe': 'gold'})
++ scale_size(range = (0, 15))
++ theme_bw()
++ theme(panel_grid_minor=element_blank(), figure_size=(8, 4))
++ theme(legend_position = 'none')
++ labs(x='Exports (\% of GDP)', y='Imports (\% of GDP)')
++ annotate("text", x = 120, y = 200, label = "1997", size = 180, alpha = 0.1, ha = "center", va = "center")
+
+
+)
+```
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| warning: false
+#| message: false
+
+(ggplot(df2,
+aes(
+  x = "exports",
+  y = "imports",
+  fill = "four_regions"))
++ geom_violin()
+)
+```
+
+This violin chart is similar to the box and whisker chart where I think it makes it really easy to see which regions have higher values on the x-axis which in thuis case is exports. Other than that, I find the bubble chart to show the data better. 
+## Task 3
+3.1 
+The aesthetics being used here are internet users on the x-axis, gdp per capita on the y-axis, the colors are based on continent, and the size of each bubble is based on income usage.
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| warning: false
+#| message: false
+
+df3 = pd.read_csv("/Users/kellogg/Downloads/Cal Poly 5th Year/Machine-Learning-Class-Git/Lab 1/Data/q3data.csv")
+
+from plotnine import *
+
+(ggplot(df3,
+aes(
+  x = "internet_users",
+  y = "gdp",
+  color = "four_regions",
+  size = "income",
+))
++ geom_point(alpha = 0.6, stroke = 1)
++ scale_x_continuous(limits = (0, 100), breaks = list(range(0,100,10)))
++ scale_y_log10(limits = (0, 200000),
+    breaks = [200, 500, 1000, 2000, 5000, 10000, 25000, 50000, 100000, 200000],
+    labels = ["200", "500", "1000", "2000", "5000", "10k", "25k", "50k", "100k", ""])
++ scale_color_manual(values = {'americas': 'green', 'asia': 'red', 'africa': 'deepskyblue', 'europe': 'gold'})
++ scale_size(range = (0, 15))
++ theme_bw()
+# + theme(figure_size = (9,4))
++ theme(panel_grid_minor=element_line(color='black', size=0.2, linetype='dotted'), figure_size=(8, 4))
++ labs(x = 'Individuals using the Internet', y = 'GDP/capita')
++ theme(legend_position = 'none')
++ annotate("text", x = 55, y = 3000, label = "2001", size = 180, alpha = 0.1, ha = "center", va = "center")
+
+)
+
+```
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| warning: false
+#| message: false
+
+(ggplot(df3,
+aes(
+  x = "internet_users",
+  y = "gdp",
+  fill = "four_regions"
+))
++ geom_area()
+)
+```
+
+This stacked area chart is showing internet users vs gdp based on the four regions. This chart is hard to read and does not really show us much besides which region has the most internet users. Again, I found the bubble chart to be much better.
