@@ -2200,15 +2200,16 @@ vertical-align: -.125em;
 </header>
 
 
+<p><a href="https://github.com/carsonn-k/Machine-Learning-Class-Git/tree/main/2.1" class="uri">https://github.com/carsonn-k/Machine-Learning-Class-Git/tree/main/2.1</a></p>
 <p>In this practice activity you’ll continue to work with the titanic dataset in ways that flex what you’ve learned about both data wrangling and data visualization.</p>
-<div id="3e2d302d" class="cell" data-execution_count="1">
+<div id="f4675162" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>data_dir <span class="op">=</span> <span class="st">&quot;https://dlsun.github.io/pods/data/&quot;</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>df_titanic <span class="op">=</span> pd.read_csv(data_dir <span class="op">+</span> <span class="st">&quot;titanic.csv&quot;</span>)</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>df_titanic.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="41">
+<div class="cell-output cell-output-display" data-execution_count="46">
 <div>
 
 
@@ -2296,11 +2297,11 @@ vertical-align: -.125em;
 </div>
 <section id="filter-the-data-to-include-passengers-only.-calculate-the-joint-distribution-cross-tab-between-a-passengers-class-and-where-they-embarked." class="level1">
 <h1>1. Filter the data to include passengers only. Calculate the joint distribution (cross-tab) between a passenger’s class and where they embarked.</h1>
-<div id="7f1fa3ba" class="cell" data-execution_count="2">
+<div id="c5e8cb54" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df_titanic_passengers <span class="op">=</span> df_titanic[(df_titanic[<span class="st">&#39;class&#39;</span>] <span class="op">==</span> <span class="st">&#39;1st&#39;</span>) <span class="op">|</span> (df_titanic[<span class="st">&#39;class&#39;</span>] <span class="op">==</span> <span class="st">&#39;2nd&#39;</span>) <span class="op">|</span> (df_titanic[<span class="st">&#39;class&#39;</span>] <span class="op">==</span> <span class="st">&#39;3rd&#39;</span>)]</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>df_titanic_passengers</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="42">
+<div class="cell-output cell-output-display" data-execution_count="47">
 <div>
 
 
@@ -2459,9 +2460,9 @@ vertical-align: -.125em;
 </div>
 </div>
 </div>
-<div id="8e2b8081" class="cell" data-execution_count="3">
+<div id="b915f032" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>pd.crosstab(df_titanic_passengers[<span class="st">&quot;class&quot;</span>], df_titanic_passengers[<span class="st">&quot;embarked&quot;</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="43">
+<div class="cell-output cell-output-display" data-execution_count="48">
 <div>
 
 
@@ -2522,7 +2523,7 @@ vertical-align: -.125em;
 <li>What proportion of 3rd class passengers embarked at Southampton?</li>
 <li>What proportion of Southampton passengers were in 3rd class?</li>
 </ul>
-<div id="019977ae" class="cell" data-execution_count="4">
+<div id="114c3d49" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>given_embarked <span class="op">=</span> pd.crosstab(df_titanic_passengers[<span class="st">&quot;class&quot;</span>], df_titanic_passengers[<span class="st">&quot;embarked&quot;</span>], normalize <span class="op">=</span> <span class="st">&quot;columns&quot;</span>)</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>given_class <span class="op">=</span> pd.crosstab(df_titanic_passengers[<span class="st">&quot;class&quot;</span>], df_titanic_passengers[<span class="st">&quot;embarked&quot;</span>], normalize <span class="op">=</span> <span class="st">&quot;index&quot;</span>)</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2548,7 +2549,7 @@ class
 <section id="make-a-visualization-showing-the-distribution-of-a-passengers-class-given-where-they-embarked." class="level1">
 <h1>3. Make a visualization showing the distribution of a passenger’s class, given where they embarked.</h1>
 <p>Discuss the pros and cons of using this visualization versus the distributions you calculated before, to answer the previous questions.</p>
-<div id="44d1c3ec" class="cell" data-execution_count="5">
+<div id="cfa089b7" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotnine <span class="im">import</span> <span class="op">*</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>(ggplot(df_titanic_passengers,</span>

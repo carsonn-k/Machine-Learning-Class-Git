@@ -6,6 +6,9 @@ format:
     embed-resources: true
 
 ---
+
+<https://github.com/carsonn-k/Machine-Learning-Class-Git/tree/main/2.1>
+
 In this practice activity you'll continue to work with the titanic dataset in ways that flex what you've learned about both data wrangling and data visualization.
 
 ```{python}
