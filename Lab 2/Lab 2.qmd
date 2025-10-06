@@ -1,0 +1,194 @@
+---
+title: "Lab 2"
+format: html
+code-fold: true
+---
+
+# 0
+```{python}
+#| code-fold: false
+
+import pandas as pd
+from plotnine import *
+
+df = pd.read_csv("/Users/kellogg/Downloads/Cal Poly 5th Year/Machine-Learning-Class-Git/Lab 2/avocado-updated-2020.csv")
+```
+
+# 1
+This data contains data on avacado sales. Specifically, dates of sales, volume of each sale, location, type of avacado, and the bags that were used. While cleaning, I plan on renaming the columns indicating size of avacado and also categorizing the geography column into city, state, region, and US. PLU 4046 corresponds to small avacadods, 4225 to large, and 4770 to extra large.
+
+# 2
+```{python}
+#| code-fold: false
+
+df_clean = df.rename({"4046": "PLU 4046"}, axis=1)
+df_clean = df_clean.rename({"4225": "PLU 4225"}, axis=1)
+df_clean = df_clean.rename({"4770": "PLU 4770"}, axis=1)
+
+us = {"Total U.S."}
+
+regions = {"Northeast", "Northern New England", "Great Lakes",
+"Plains", "Midsouth", "South Central", "Southeast", "West"}
+
+states = {"California", "Sourth Carolina", "West Tex/New Mexico"}
+def classify_location(loc):
+    if pd.isna(loc):
+        return None
+    
+    loc_clean = loc.strip()
+    
+    if loc_clean in us:
+        return "us"
+    elif loc_clean in regions:
+        return "region"
+    elif loc_clean in states:
+        return "state"
+    else:
+        return "city"
+
+df_clean["location_type"] = df_clean["geography"].apply(classify_location)
+
+```
+
+# 3
+```{python}
+
+(ggplot(df_clean.query("year == 2017 and location_type == 'region' and type == 'organic'"), aes(x = "geography", y = "PLU 4046"
+))
+    + geom_bar(stat = "identity")
+    + theme(axis_text_x = element_text(rotation = 45))
+
+)
+```
+This chart shows us that in 2017, the West region sold the most organic Hass avacods in 2017.
+
+# 4
+```{python}
+
+df_clean["date"] = pd.to_datetime(df_clean["date"])
+df_clean["month"] = df_clean["date"].dt.month
+df_clean["day"] = df_clean["date"].dt.day
+
+df_clean_avg = df_clean.groupby("month", as_index=False)["total_volume"].mean()
+
+(ggplot(df_clean_avg, aes(x="month", y="total_volume"))
+    + geom_bar(stat="identity")
+)
+```
+the 5th month (may) has the highest volume of average sales
+
+# 5 
+```{python}
+
+df_clean_avg = df_clean.query("location_type == 'city'")
+
+top5_regions = df_clean_avg.groupby("geography")["total_volume"].mean().nlargest(5).index
+df_top5 = df_clean_avg[df_clean_avg["geography"].isin(top5_regions)]
+
+ggplot(df_top5, aes(x="geography", y="total_volume", fill="geography")) + geom_boxplot()
+```
+Los Angeles was the metro area geographical region with the most sales.
+
+# 6 
+```{python}
+
+#| code-fold: false
+
+df_clean_cali = df_clean.query("location_type == 'city'")
+
+df_clean_cali = df_clean_cali.query(
+    "geography == 'Los Angeles' or geography == 'San Diego' or geography == 'San Francisco' or geography == 'Sacramento'"
+)
+
+```
+
+# 7
+```{python}
+
+df_clean_cali_pivot = df_clean_cali.pivot_table(
+    index=["year", "geography"],  
+    columns="type",
+    values="average_price",
+    aggfunc="mean"          
+).reset_index()
+
+df_clean_cali_pivot
+
+df_clean_cali_pivot["price_diff"] = df_clean_cali_pivot["organic"] - df_clean_cali_pivot["conventional"]
+
+df_clean_cali_pivot
+
+df_clean_cali_pivot = df_clean_cali_pivot.groupby("geography")["price_diff"].mean().reset_index()
+
+df_clean_cali_pivot
+
+print(df_clean_cali_pivot)
+
+(ggplot(df_clean_cali_pivot, 
+    aes(x = "geography", y = "price_diff"))
++ geom_bar(stat = "identity", position = "dodge")
+)
+```
+San Fransisco has the highest average difference in cost from organic versus conventional avocados. The chart and visualization above are showing each cities average differnece in price from organic to conventional avacoados within a year. For San Fransisco, we are seeing an average increase of 0.716 from conventional or organic.
+
+# 8
+```{python}
+
+df_clean_cali_melt = df_clean_cali.copy()
+df_clean_cali_melt["prop_small"] = df_clean_cali_melt["PLU 4046"] / df_clean_cali_melt["total_volume"]
+df_clean_cali_melt["prop_large"] = df_clean_cali_melt["PLU 4225"] / df_clean_cali_melt["total_volume"]
+df_clean_cali_melt["prop_xlarge"] = df_clean_cali_melt["PLU 4770"] / df_clean_cali_melt["total_volume"]
+
+
+df_clean_cali_melt = df_clean_cali_melt.groupby(["geography", "type"])[
+    ["prop_small", "prop_large", "prop_xlarge"]
+].mean().reset_index()
+
+df_clean_cali_melt = df_clean_cali_melt.melt(
+    id_vars=["geography", "type"],
+    value_vars=["prop_small", "prop_large", "prop_xlarge"],
+    var_name="size",
+    value_name="proportion"
+)
+(ggplot(df_clean_cali_melt, aes(x="geography", y="proportion", fill="size")) 
++ geom_col(position="fill") 
++ facet_wrap("~type")
++ theme(axis_text_x=element_text(rotation=45))
+)
+```
+
+# Using Outside Data
+
+```{python}
+
+df_clean_cali = df_clean_cali.groupby(["geography", "year"])["total_volume"].mean().reset_index()
+
+cali_home_prices = pd.read_csv("/Users/kellogg/Downloads/Cal Poly 5th Year/Machine-Learning-Class-Git/Lab 2/california_home_prices.csv")
+
+cali_home_prices["year"] =  cali_home_prices["Year"]
+cali_home_prices["geography"] =  cali_home_prices["City"]
+cali_home_prices.drop(['Year', 'City'], axis=1, inplace=True)
+
+merged_df = cali_home_prices.merge(df_clean_cali, on=["geography", "year"], how="inner")
+merged_df
+
+
+merged_df = (
+    merged_df.groupby("year", as_index=False)[["Average Home Price (USD)", "total_volume"]]
+      .mean()
+)
+
+merged_df["proportion"] = merged_df["total_volume"] / merged_df["Average Home Price (USD)"]
+
+merged_df
+
+(ggplot(
+    merged_df, 
+    aes(x="year", y="proportion"))
+    + geom_bar(stat="identity")
+)
+```
+
+What I did here:
+
+I found a dataset that had data on the 4 cities (San Diego, Los Angles, San Fransisco, and Sacramento) that had average home price from years 2010 - 2020. I only retained years 2015-2020 and imported into python. I then renamed some of the columns, merged the dataframe with my California data on avacado sales, and produced a bar chart. This bar chart shows the proportion of money spent on avacados, vs average house price. As you can see, there is an upwards trend. This means that people are buying  avacados at increasingly greater rate than house prices are increasing. There is slight evidence to support that Millennials are struggling to afford homes because they are spending more on avacados. 
