@@ -1,0 +1,219 @@
+---
+title: "Lab 4"
+format:
+  html:
+    embed-resources: true
+code-fold: true
+---
+
+# Part 1
+```{python}
+import pandas as pd
+import requests
+
+URL = "https://tastesbetterfromscratch.com/meal-plan-209/"
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+response = requests.get(URL, headers=HEADERS)
+from bs4 import BeautifulSoup
+soup = BeautifulSoup(response.text, "html.parser")
+
+```
+
+
+```{python}
+items = soup.find_all('p', class_='has-text-align-left')
+items
+```
+
+```{python}
+data = [] 
+
+for item in items:
+    day = item.find('strong').get_text(strip=True)
+    link_tag = item.find('a')
+    title = link_tag.get_text(strip=True)
+    link = link_tag['href']
+
+    full_text = item.text.strip()
+    price = full_text.split()[-1]
+
+    data.append({
+        'Day': day,
+        'Title': title,
+        'Link': link,
+        'Price': price
+    })
+
+df = pd.DataFrame(data)
+
+pd.set_option('display.expand_frame_repr', False)
+print(df)
+
+```
+
+# Part 2
+```{python}
+url = "https://tasty.p.rapidapi.com/recipes/list"
+
+monday_recipe = df.loc[df['Day'] == 'Monday', 'Title'].values[0]
+query = monday_recipe.strip().lower()
+
+querystring = {"from":"0","size":"100","q":query}
+
+headers = {
+	"x-rapidapi-key": "096c718999msh065f8ca3cfea9e6p1b64b4jsn1285a4c4d480",
+	"x-rapidapi-host": "tasty.p.rapidapi.com"
+}
+
+response = requests.get(url, headers=headers, params=querystring)
+data = response.json()
+recipes = data.get("results", [])
+
+tasty_df = pd.DataFrame(recipes)
+tasty_df["Calories"] = tasty_df["nutrition"].apply(lambda x: x.get("calories") if isinstance(x, dict) else None)
+tasty_df["Protein"]  = tasty_df["nutrition"].apply(lambda x: x.get("protein") if isinstance(x, dict) else None)
+tasty_df["Fat"]      = tasty_df["nutrition"].apply(lambda x: x.get("fat") if isinstance(x, dict) else None)
+tasty_df["Carbs"]    = tasty_df["nutrition"].apply(lambda x: x.get("carbohydrates") if isinstance(x, dict) else None)
+
+print(tasty_df[["name", "description"]])
+```
+
+
+# Part 3
+```{python}
+def get_weekly_plan(meal_plan_number):
+
+    URL = "https://tastesbetterfromscratch.com/meal-plan-" + str(meal_plan_number) + "/"
+    HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+    response = requests.get(URL, headers=HEADERS)
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    items = soup.find_all('p', class_='has-text-align-left')
+
+    data = [] 
+
+    for item in items:
+        day = item.find('strong').get_text(strip=True)
+        if day[-1] == ":":
+            day = day[:len(day)-1]
+        link_tag = item.find('a')
+        title = link_tag.get_text(strip=True)
+        link = link_tag['href']
+
+        full_text = item.text.strip()
+        price = full_text.split()[-1]
+
+        data.append({
+            'Day': day,
+            'Title': title,
+            'Link': link,
+            'Price': price
+        })
+
+    df = pd.DataFrame(data)
+    print(df)
+    return df
+
+```
+
+```{python}
+def match_recipe(df, day):
+    url = "https://tasty.p.rapidapi.com/recipes/list"
+
+    day_recipe = df.loc[df['Day'] == day, 'Title'].values[0]
+    query = day_recipe.strip().lower()
+
+    querystring = {"from":"0","size":"100","q":query}
+
+    headers = {
+        "x-rapidapi-key": "096c718999msh065f8ca3cfea9e6p1b64b4jsn1285a4c4d480",
+        "x-rapidapi-host": "tasty.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers, params=querystring)
+    data = response.json()
+    recipes = data.get("results", [])
+
+    df = pd.DataFrame(recipes)
+    df["Calories"] = df["nutrition"].apply(lambda x: x.get("calories") if isinstance(x, dict) else None)
+    df["Protein"]  = df["nutrition"].apply(lambda x: x.get("protein") if isinstance(x, dict) else None)
+    df["Fat"]      = df["nutrition"].apply(lambda x: x.get("fat") if isinstance(x, dict) else None)
+    df["Carbs"]    = df["nutrition"].apply(lambda x: x.get("carbohydrates") if isinstance(x, dict) else None)
+    return df
+```
+
+
+```{python}
+def get_mealplan_data(meal_plan_number):
+    df = get_weekly_plan(meal_plan_number)
+
+    df_mon = match_recipe(df, "Monday")
+    df_mon["Day"] = "Monday"
+    df_mon["Price"] = df.loc[df["Day"] == "Monday", "Price"].values[0]
+    df_mon["Link"] = df.loc[df["Day"] == "Monday", "Link"].values[0]
+    df_mon["Meal Plan Title"] = df.loc[df["Day"] == "Monday", "Title"].values[0]
+
+    df_tue = match_recipe(df, "Tuesday")
+    df_tue["Day"] = "Tuesday"
+    df_tue["Price"] = df.loc[df["Day"] == "Tuesday", "Price"].values[0]
+    df_tue["Link"] = df.loc[df["Day"] == "Tuesday", "Link"].values[0]
+    df_tue["Meal Plan Title"] = df.loc[df["Day"] == "Tuesday", "Title"].values[0]
+
+    df_wed = match_recipe(df, "Wednesday")
+    df_wed["Day"] = "Wednesday"
+    df_wed["Price"] = df.loc[df["Day"] == "Wednesday", "Price"].values[0]
+    df_wed["Link"] = df.loc[df["Day"] == "Wednesday", "Link"].values[0]
+    df_wed["Meal Plan Title"] = df.loc[df["Day"] == "Wednesday", "Title"].values[0]
+
+    df_thu = match_recipe(df, "Thursday")
+    df_thu["Day"] = "Thursday"
+    df_thu["Price"] = df.loc[df["Day"] == "Thursday", "Price"].values[0]
+    df_thu["Link"] = df.loc[df["Day"] == "Thursday", "Link"].values[0]
+    df_thu["Meal Plan Title"] = df.loc[df["Day"] == "Thursday", "Title"].values[0]
+
+    df_fri = match_recipe(df, "Friday")
+    df_fri["Day"] = "Friday"
+    df_fri["Price"] = df.loc[df["Day"] == "Friday", "Price"].values[0]
+    df_fri["Link"] = df.loc[df["Day"] == "Friday", "Link"].values[0]
+    df_fri["Meal Plan Title"] = df.loc[df["Day"] == "Friday", "Title"].values[0]
+
+
+    df = pd.concat([df_mon, df_tue, df_wed, df_thu, df_fri], ignore_index=True)
+
+    pd.set_option("display.max_colwidth", None)
+
+    return df[["Day", "Meal Plan Title", "Link", "Price", "name", "description", "Calories", "Protein"]]
+```
+
+```{python}
+df = get_mealplan_data(203)
+df
+```
+
+# Part 4
+
+
+```{python}
+meats = ["chicken", "beef", "pork", "bacon", "turkey", "sausage", "ham", "fish", "shrimp", "salmon", "tuna", "meat"]
+
+df["Vegetarian"] = df["name"].apply(
+    lambda x: "No" if any(meat in x.lower() for meat in meats) else "Yes"
+)
+
+df
+```
+
+# Part 6
+```{python}
+from plotnine import *
+
+(ggplot(df, aes(x="Calories", y="Protein", color="Day", shape="Vegetarian"))
+    + geom_point(size=4, alpha=0.9)
+    + labs(title="Calories vs Protein by Day", x="Calories", y="Protein", color="Day", shape="Vegetarian")
+)
+```
+
+From the plot we can see that meals that are vegetarian (points with triangle shape) tend to be much lower in calories and protein. Additionally, we can see that there is a posative correlation between calories and protein, meaning generally, a meal with more calories also has more protein. Lastly, we can see from the colors (indicating days) that there is not a clear trend in calorie or protien count by day.

@@ -1,0 +1,162 @@
+---
+title: "Lab 4"
+format:
+  html:
+    embed-resources: true
+code-fold: true
+---
+
+# Part 1
+```{python}
+import pandas as pd
+import requests
+
+URL = "https://tastesbetterfromscratch.com/meal-plan-209/"
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+response = requests.get(URL, headers=HEADERS)
+from bs4 import BeautifulSoup
+soup = BeautifulSoup(response.text, "html.parser")
+
+```
+
+
+```{python}
+items = soup.find_all('p', class_='has-text-align-left')
+items
+```
+
+```{python}
+data = [] 
+
+for item in items:
+    day = item.find('strong').get_text(strip=True)
+    link_tag = item.find('a')
+    title = link_tag.get_text(strip=True)
+    link = link_tag['href']
+
+    full_text = item.text.strip()
+    price = full_text.split()[-1]
+
+    data.append({
+        'Day': day,
+        'Title': title,
+        'Link': link,
+        'Price': price
+    })
+
+df = pd.DataFrame(data)
+
+pd.set_option('display.expand_frame_repr', False)
+print(df)
+
+```
+
+# Part 2
+```{python}
+url = "https://tasty.p.rapidapi.com/recipes/list"
+
+monday_recipe = df.loc[df['Day'] == 'Monday', 'Title'].values[0]
+query = monday_recipe.strip().lower()
+
+querystring = {"from":"0","size":"100","q":query}
+
+headers = {
+	"x-rapidapi-key": "096c718999msh065f8ca3cfea9e6p1b64b4jsn1285a4c4d480",
+	"x-rapidapi-host": "tasty.p.rapidapi.com"
+}
+
+response = requests.get(url, headers=headers, params=querystring)
+data = response.json()
+recipes = data.get("results", [])
+
+tasty_df = pd.DataFrame(recipes)
+print(tasty_df[["name", "description"]])
+```
+
+
+# Part 3
+```{python}
+def get_weekly_plan(meal_plan_number):
+
+    URL = "https://tastesbetterfromscratch.com/meal-plan-" + str(meal_plan_number) + "/"
+    HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+    response = requests.get(URL, headers=HEADERS)
+    from bs4 import BeautifulSoup
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    items = soup.find_all('p', class_='has-text-align-left')
+
+    data = [] 
+
+    for item in items:
+        day = item.find('strong').get_text(strip=True)
+        link_tag = item.find('a')
+        title = link_tag.get_text(strip=True)
+        link = link_tag['href']
+
+        full_text = item.text.strip()
+        price = full_text.split()[-1]
+
+        data.append({
+            'Day': day,
+            'Title': title,
+            'Link': link,
+            'Price': price
+        })
+
+    df = pd.DataFrame(data)
+    print(df)
+    return df
+
+```
+
+```{python}
+def match_recipe(df):
+    url = "https://tasty.p.rapidapi.com/recipes/list"
+
+    monday_recipe = df.loc[df['Day'] == 'Monday', 'Title'].values[0]
+    query = monday_recipe.strip().lower()
+
+    querystring = {"from":"0","size":"100","q":query}
+
+    headers = {
+        "x-rapidapi-key": "096c718999msh065f8ca3cfea9e6p1b64b4jsn1285a4c4d480",
+        "x-rapidapi-host": "tasty.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers, params=querystring)
+    data = response.json()
+    recipes = data.get("results", [])
+
+    df = pd.DataFrame(recipes)
+    return df
+```
+
+
+```{python}
+def get_mealplan_data(meal_plan_number):
+    df = get_weekly_plan(meal_plan_number)
+    df = match_recipe(df)
+    pd.set_option("display.max_colwidth", None)
+    return df[["name", "description"]]
+```
+
+```{python}
+df = get_mealplan_data(203)
+df
+```
+
+# Part 4
+
+
+```{python}
+meats = ["chicken", "beef", "pork", "bacon", "turkey", "sausage", "ham", "fish", "shrimp", "salmon", "tuna", "meat"]
+
+df["Vegetarian"] = df["name"].apply(
+    lambda x: "No" if any(meat in x.lower() for meat in meats) else "Yes"
+)
+
+df
+```
