@@ -1,0 +1,128 @@
+---
+title: "PA 6.1"
+html:
+    embed-resources: true
+code-fold: true
+---
+
+# Palmer Penguins Modeling
+
+Import the Palmer Penguins dataset and print out the first few rows.
+
+Suppose we want to predict `bill_depth_mm` using the other variables in the dataset.
+
+Which variables would we need to **dummify**?
+
+
+```{python}
+pip install palmerpenguins
+```
+
+```{python}
+from palmerpenguins import load_penguins
+
+df = load_penguins()
+df.head()
+```
+
+
+```{python}
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+import pandas as pd
+import numpy as np
+```
+
+
+```{python}
+df_clean = df.dropna(subset=['bill_length_mm'])
+df_clean = df_clean.dropna(subset=['bill_depth_mm'])
+```
+
+
+```{python}
+bill_len = LinearRegression()
+bill_len.fit(
+    X=df_clean[["bill_length_mm"]],
+    y=df_clean["bill_depth_mm"]
+)
+```
+
+
+```{python}
+X_new = pd.DataFrame()
+X_new["bill_length_mm"] = np.linspace(20, 60, num=1000)
+y_new_ = pd.Series(
+    bill_len.predict(X_new),
+    index=X_new["bill_length_mm"]
+)
+
+df_clean.plot.scatter(x="bill_length_mm", y="bill_depth_mm")
+y_new_.plot.line(c = "orange");
+```
+
+
+```{python}
+poly2 = PolynomialFeatures(degree=2)
+X_poly2 = poly2.fit_transform(df_clean[["bill_length_mm"]])
+bill_len2 = LinearRegression().fit(X_poly2, df_clean["bill_depth_mm"])
+
+poly3 = PolynomialFeatures(degree=3)
+X_poly3 = poly3.fit_transform(df_clean[["bill_length_mm"]])
+bill_len3 = LinearRegression().fit(X_poly3, df_clean["bill_depth_mm"])
+
+poly10 = PolynomialFeatures(degree=10)
+X_poly10 = poly10.fit_transform(df_clean[["bill_length_mm"]])
+bill_len10 = LinearRegression().fit(X_poly10, df_clean["bill_depth_mm"])
+```
+
+
+```{python}
+X_new_poly2 = poly2.transform(X_new)
+y_new2 = pd.Series(
+    bill_len2.predict(X_new_poly2),
+    index=X_new["bill_length_mm"]
+)
+
+X_new_poly3 = poly3.transform(X_new)
+y_new3 = pd.Series(
+    bill_len3.predict(X_new_poly3),
+    index=X_new["bill_length_mm"]
+)
+
+X_new_poly10 = poly10.transform(X_new)
+y_new10 = pd.Series(
+    bill_len10.predict(X_new_poly10),
+    index=X_new["bill_length_mm"]
+)
+```
+
+
+```{python}
+X_new = pd.DataFrame()
+X_new["bill_length_mm"] = np.linspace(20, 60, num=1000)
+y_new_ = pd.Series(
+    bill_len.predict(X_new),
+    index=X_new["bill_length_mm"]
+)
+
+ax = df_clean.plot.scatter(x="bill_length_mm", y="bill_depth_mm")
+y_new_.plot.line(c = "orange", label = "Linear")
+y_new2.plot.line( c = "green", label = "2nd Degree")
+y_new3.plot.line( c = "blue", label= "3rd Degree")
+y_new10.plot.line( c = "red", label= "10th Degree")
+
+ax.set_xlim(20, 70)
+ax.set_ylim(10, 25)
+
+ax.legend()
+;
+```
+
+Simple linear regression (e.g. straight-line) model
+Quadratic (degree 2 polynomial) model
+Cubic (degree 3 polynomial) model
+Degree 10 polynomial model
+Make predictions for each model and plot your fitted models on the scatterplot.
+
+It is obvious that modle 1 (linear) is under fittig the data, this is becasue there is no curvature even though there is a change in trend of the data. Modle 4 (10th degree) is overfitting the data, this is obvious becasue of the excess in changes in direciton of the line. It is trying to capture the nuances of the data too strongly. I think that modles 2 (2nd degree) and 3 (3rd defree) do the best at represernignt the data. They both capture the changes in trend of the data without overfitting.
