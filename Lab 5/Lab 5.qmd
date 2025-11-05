@@ -1,0 +1,478 @@
+---
+title: "Lab 5"
+format:
+  html:
+    embed-resources: true
+code-fold: false
+---
+
+# Part 1
+
+```{python}
+import pandas as pd
+url = "https://www.dropbox.com/s/bocjjyo1ehr5auz/insurance_costs_1.csv?dl=1"
+
+df = pd.read_csv(url)
+df.head()
+```
+
+```{python}
+df.describe()
+```
+
+```{python}
+df.isnull().sum()
+```
+
+I do not have any concerns about the data
+```{python}
+from plotnine import *
+
+(ggplot(df, aes(x="bmi", y="charges"))
+    + geom_point(alpha=0.6) 
+    + geom_smooth(method="lm", color="red") 
+    + labs(
+        title="Relationship between BMI and Insurance Charges",
+        x="BMI",
+        y="Charges"
+    ) +
+    theme_minimal()
+)
+```
+
+This plot shows that as BMI incresaes, we also see a slight increase in Insurance costs. 
+
+```{python}
+(ggplot(df, aes(x="age", y="charges"))
+    + geom_point(alpha=0.6) 
+    + geom_smooth(method="lm", color="red") 
+    + labs(
+        title="Relationship between Age and Insurance Charges",
+        x="Age",
+        y="Charges"
+    ) +
+    theme_minimal()
+)
+```
+
+This plot shows that as Age incresaes, we also see an increase in Insurance costs. This plot also shows that there appears to be a 3 distinct bands, potentally caused by number of insurance claims (0, 1, or 2). We can see that each distinct band increases with age basically linearly. 
+
+```{python}
+(ggplot(df, aes(x="smoker", y="charges"))
+    + geom_point(alpha=0.6) 
+    + labs(
+        title="Relationship between Smoker and Insurance Charges",
+        x="Smoker",
+        y="Charges"
+    ) +
+    theme_minimal()
+)
+```
+
+This plot shows that the average, minimum, and maximum charges for smokers are all higher than for non smokers. 
+
+# Part 2
+
+## Q1
+```{python}
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+
+model_age = LinearRegression()
+model_age.fit(
+    X=df[["age"]],
+    y=df["charges"]
+)
+
+model_age.coef_, model_age.intercept_
+```
+
+```{python}
+r2_age = model_age.score(df[["age"]], df["charges"])
+r2_age
+```
+
+```{python}
+y_pred_age = model_age.predict(df[["age"]])
+
+mse_age = mean_squared_error(df["charges"], y_pred_age)
+
+
+```
+
+The R^2 value of about 0.1 indicates that our model explains some of the variance, but not very much. The coefficient of 228 indicates that with an increase in age by 1, we predict the cost goes up by 228. The intercept of 3611 implies that if someone was 0 years old they would expect to have $3611 in charges. 
+
+## Q2
+```{python}
+df["sex_male"] = (df["sex"] == "male").astype(int)
+
+```
+
+```{python}
+model_sex = LinearRegression()
+model_sex.fit(
+    X=df[["sex_male"]],
+    y=df["charges"]
+)
+
+model_sex.coef_, model_sex.intercept_
+```
+
+
+```{python}
+r2_sex = model_sex.score(df[["sex_male"]], df["charges"])
+r2_sex
+```
+
+The R^2 value of about 0 indicates that our model basically explains none of the variation. The coefficient of 790 indicates that a male will have an expected charges value of 790 more than female. This is essentially negligible considering we are thinking in terms of tens of thousands of dollars. The intercept of 11919 implies that if someone is a female (0 in our new df column) we would expect their charges to be $11919. 
+
+## Q3
+```{python}
+df["smoker_yes"] = (df["smoker"] == "yes").astype(int)
+df
+```
+
+```{python}
+model_smoke = LinearRegression()
+model_smoke.fit(
+    X=df[["smoker_yes"]],
+    y=df["charges"]
+)
+
+model_smoke.coef_, model_smoke.intercept_
+```
+
+
+```{python}
+r2_smoke = model_smoke.score(df[["smoker_yes"]], df["charges"])
+r2_smoke
+```
+
+The R^2 value of about 0.64 indicates that our model explains a considerable ammount of the variation. The coefficient of 23623 indicates that a smoker will have an expected charges value of 23623 more than a non-smoker. The intercept of 7528 implies that if someone is not a smoker, their expected charges is only $7528. 
+
+
+```{python}
+from sklearn.metrics import mean_squared_error
+import numpy as np
+
+y_pred_smoke = model_smoke.predict(df[["smoker_yes"]])
+
+mse_smoke = mean_squared_error(df["charges"], y_pred_smoke)
+
+y_pred_sex = model_sex.predict(df[["sex_male"]])
+
+mse_sex = mean_squared_error(df["charges"], y_pred_sex)
+
+```
+
+```{python}
+print("Sex MSE: " + str(mse_sex))
+print("Smoke MSE: " + str(mse_smoke))
+print("Sex R2: " + str(r2_sex))
+print("Smoke R2: " + str(r2_smoke))
+```
+
+Based on the smaller MSE and larger R2 we can conclude that the Model including Smoke is better than the one including sex.
+
+# Part 3
+
+```{python}
+model_age_bmi = LinearRegression()
+model_age_bmi.fit(
+    X=df[["age", "bmi"]],
+    y=df["charges"]
+)
+
+y_pred_age_bmi = model_age_bmi.predict(df[["age", "bmi"]])
+
+mse_age_bmi = mean_squared_error(df["charges"], y_pred_age_bmi)
+
+r2_age_bmi = model_age_bmi.score(df[["age", "bmi"]], df["charges"])
+
+print("Age MSE: " + str(mse_age))
+print("Age R2: " + str(r2_age))
+print("Age and BMI as predictors MSE: " + str(mse_age_bmi))
+print("Age and BMI as predictors R2: " + str(r2_age_bmi))
+```
+
+The model with age and the model with age and bmi are very similar. The MSE and R2 were both better for the model that included age and bmi 
+
+## Q2
+```{python}
+df["age_sqr"] = df["age"] ** 2
+
+model_age_sqr = LinearRegression()
+model_age_sqr.fit(
+    X=df[["age", "age_sqr"]],
+    y=df["charges"]
+)
+
+y_pred_age_sqr = model_age_sqr.predict(df[["age", "age_sqr"]])
+
+mse_age_sqr = mean_squared_error(df["charges"], y_pred_age_sqr)
+
+r2_age_sqr = model_age_sqr.score(df[["age", "age_sqr"]], df["charges"])
+
+print("Age and Age^2 MSE: " + str(mse_age_sqr))
+print("Age and Age^2 R2: " + str(r2_age_sqr))
+
+```
+
+The MSE and R2 was basically the same as in P2 Q1
+
+## Q3
+
+```{python}
+from sklearn.preprocessing import PolynomialFeatures
+poly = PolynomialFeatures(degree = 4, include_bias = False)
+X_poly4 = poly.fit_transform(df[["age"]])
+
+model_age_poly4 = LinearRegression()
+model_age_poly4.fit(
+    X = X_poly4,
+    y = df["charges"]
+)
+
+y_pred_age_poly4 = model_age_poly4.predict(X_poly4)
+
+mse_age_poly4 = mean_squared_error(df["charges"], y_pred_age_poly4)
+r2_age_poly4 = model_age_poly4.score(X_poly4, df["charges"])
+
+print("Age 4th degree MSE: " + str(mse_age_poly4))
+print("Age 4th degree R2: " + str(r2_age_poly4))
+
+```
+
+MSE and R2 for this model are slighly better than in P2 Q1 but they are basically the same
+
+## Q4
+```{python}
+poly = PolynomialFeatures(degree = 12, include_bias = False)
+X_poly12 = poly.fit_transform(df[["age"]])
+
+model_age_poly12 = LinearRegression()
+model_age_poly12.fit(
+    X = X_poly12,
+    y = df["charges"]
+)
+
+y_pred_age_poly12 = model_age_poly12.predict(X_poly12)
+
+mse_age_poly12 = mean_squared_error(df["charges"], y_pred_age_poly12)
+r2_age_poly12 = model_age_poly12.score(X_poly12, df["charges"])
+
+print("Age 12th degree MSE: " + str(mse_age_poly12))
+print("Age 12th degree R2: " + str(r2_age_poly12))
+```
+
+MSE and R2 for this model are slighly better than in P2 Q1 but they are basically the same
+
+## Q5
+According to MSE and R2 the best model is P3 Q1 with a larger R2 and lower MSE. I do not think this is indeed the best model, I bet there are some other transformations or interactions that would produce a better model. 
+
+## Q6
+
+
+```{python}
+(ggplot(df, aes(x="age", y="charges")) 
+    + geom_point(alpha=0.6, color="gray") 
+    + geom_line(aes(y="y_pred_age_poly12"), color="blue", size=1.2) 
+    + labs(
+        title="Charges vs Age with 12th Degree Polynomial Fit",
+        x="Age",
+        y="Charges"
+    )
+)
+```
+
+# Part 4
+
+
+```{python}
+url_train = "https://www.dropbox.com/s/bocjjyo1ehr5auz/insurance_costs_1.csv?dl=1"
+
+url_test = "https://www.dropbox.com/s/sky86agc4s8c6qe/insurance_costs_2.csv?dl=1"
+
+df = pd.read_csv(url_train)
+df_new = pd.read_csv(url_test)
+df_new.head()
+```
+
+
+```{python}
+y_pred_age_new = model_age.predict(df_new[["age"]])
+r2_age_new = model_age.score(df_new[["age"]], df_new["charges"])
+mse_age_new = mean_squared_error(df_new["charges"], y_pred_age_new)
+
+y_pred_age_bmi_new = model_age_bmi.predict(df_new[["age", "bmi"]])
+r2_age_bmi_new = model_age_bmi.score(df_new[["age", "bmi"]], df_new["charges"])
+mse_age_bmi_new = mean_squared_error(df_new["charges"], y_pred_age_new)
+
+df["smoker_yes"] = (df["smoker"] == "yes").astype(int)
+df_new["smoker_yes"] = (df_new["smoker"] == "yes").astype(int)
+
+
+model_age_bmi_smoke = LinearRegression()
+model_age_bmi_smoke.fit(
+    X=df[["age", "bmi", "smoker_yes"]],
+    y=df["charges"]
+)
+
+y_pred_age_bmi_smoke  = model_age_bmi_smoke.predict(df_new[["age", "bmi", "smoker_yes"]])
+
+mse_age_bmi_smoke = mean_squared_error(df_new["charges"], y_pred_age_bmi_smoke)
+
+r2_age_bmi = model_age_bmi_smoke.score(df_new[["age", "bmi", "smoker_yes"]], df_new["charges"])
+
+```
+
+
+```{python}
+df["age_smoke"] = df["age"] * df["smoker_yes"]
+df["bmi_smoke"] = df["bmi"] * df["smoker_yes"]
+
+df_new["age_smoke"] = df_new["age"] * df_new["smoker_yes"]
+df_new["bmi_smoke"] = df_new["bmi"] * df_new["smoker_yes"]
+
+model_age__bmi_smoke_interact = LinearRegression()
+model_age__bmi_smoke_interact.fit(
+    X=df[["age_smoke", "bmi_smoke"]],
+    y=df["charges"]
+)
+
+y_pred_age__bmi_smoke_interact = model_age__bmi_smoke_interact.predict(df_new[["age_smoke", "bmi_smoke"]])
+
+mse_age__bmi_smoke_interact = mean_squared_error(df_new["charges"], y_pred_age__bmi_smoke_interact)
+
+r2_age__bmi_smoke_interact = model_age__bmi_smoke_interact.score(df_new[["age_smoke", "bmi_smoke"]], df_new["charges"])
+
+model_age_bmi_smoke_interact = LinearRegression()
+model_age_bmi_smoke_interact.fit(
+    X=df[["age", "bmi", "smoker_yes", "age_smoke", "bmi_smoke"]],
+    y=df["charges"]
+)
+
+y_pred_age_bmi_smoke_interact = model_age_bmi_smoke_interact.predict(df_new[["age", "bmi", "smoker_yes", "age_smoke", "bmi_smoke"]])
+mse_age_bmi_smoke_interact = mean_squared_error(df_new["charges"], y_pred_age_bmi_smoke_interact)
+
+r2_age_bmi_smoke_interact = model_age_bmi_smoke_interact.score(df_new[["age", "bmi", "smoker_yes", "age_smoke", "bmi_smoke"]], df_new["charges"])
+
+print("Age only MSE:  " + str(mse_age_new))
+print("Age and bmi MSE:  " + str(mse_age_bmi_new))
+print("Age, bmi, and smoker MSE:  " + str(mse_age_bmi_smoke))
+print("Age_smoke and bmi_smoke MSE:  " + str(mse_age__bmi_smoke_interact))
+print("Age, bmi, smoke, age_smoke, and bmi_smoke:  " + str(mse_age_bmi_smoke_interact))
+
+```
+
+
+I got the model with age, bmi, and smokeras predictors, with both quantitative variables having an interaction term with smoker as the best model. 
+
+
+```{python}
+
+df_new["predicted"] = model_age_bmi_smoke_interact.predict(df_new[["age", "bmi", "smoker_yes", "age_smoke", "bmi_smoke"]])
+
+df_new = df_new.sort_values("age")
+
+(ggplot(df_new, aes(x="age", y="charges")) 
+    + geom_point(color="steelblue", alpha=0.6)  
+    + geom_line(aes(y="predicted"), color="red", alpha=0.6, size=1.2) 
+    + geom_segment( 
+        aes(xend="age", yend="predicted"),
+        color="gray", alpha=0.5
+    ) 
+    + labs(
+        title="Model Fit with Residuals ",
+        x="Age",
+        y="Charges"
+    )
+)
+
+```
+
+The plot above shows all the new data points, the model predictions based on the origional dataset, and the distance from each point to the prediction. As we can see from the prediction line, the model is overfit. Since the training and test data are so similar, it is not causing too much of an issue, but if the data were to differ, the model would be bad. 
+
+# Part 5
+
+```{python}
+df["sex_male"] = (df["sex"] == "male").astype(int)
+df_new["sex_male"] = (df_new["sex"] == "male").astype(int)
+df["sex_male_smoke"] = df["sex_male"] * df["smoker_yes"]
+df_new["sex_male_smoke"] = df_new["sex_male"] * df_new["smoker_yes"]
+
+
+age_sex_bmi_smoke_interactions = LinearRegression()
+age_sex_bmi_smoke_interactions.fit(
+    X=df[["age", "bmi", "smoker_yes", "sex_male", "age_smoke", "bmi_smoke", "sex_male_smoke"]],
+    y=df["charges"]
+)
+
+y_predage_sex_bmi_smoke_interactions = age_sex_bmi_smoke_interactions.predict(df_new[["age", "bmi", "smoker_yes", "sex_male", "age_smoke", "bmi_smoke", "sex_male_smoke"]])
+mse_age_sex_bmi_smoke_interactions = mean_squared_error(df_new["charges"], y_predage_sex_bmi_smoke_interactions)
+
+r2_age_sex_bmi_smoke_interactions = age_sex_bmi_smoke_interactions.score(df_new[["age", "bmi", "smoker_yes", "sex_male", "age_smoke", "bmi_smoke", "sex_male_smoke"]], df_new["charges"])
+
+print("Variables: age, bmi, smoker, sex, age * smoke, bmi * smoke, sex * smoke MSE:  " + str(mse_age_sex_bmi_smoke_interactions))
+print("Variables: age, bmi, smoker, sex, age * smoke, bmi * smoke, sex * smoke R2:  " + str(r2_age_sex_bmi_smoke_interactions))
+
+```
+
+
+
+```{python}
+df["age_sqr"] = df["age"] ** 2
+df_new["age_sqr"] = df_new["age"] ** 2
+
+
+
+age_sex_bmi_smoke_interactions = LinearRegression()
+age_sex_bmi_smoke_interactions.fit(
+    X=df[["age", "bmi", "smoker_yes", "sex_male", "age_smoke", "bmi_smoke", "sex_male_smoke", "age_sqr"]],
+    y=df["charges"]
+)
+
+y_predage_sex_bmi_smoke_interactions = age_sex_bmi_smoke_interactions.predict(df_new[["age", "bmi", "smoker_yes", "sex_male", "age_smoke", "bmi_smoke", "sex_male_smoke", "age_sqr"]])
+mse_age_sex_bmi_smoke_interactions = mean_squared_error(df_new["charges"], y_predage_sex_bmi_smoke_interactions)
+
+r2_age_sex_bmi_smoke_interactions = age_sex_bmi_smoke_interactions.score(df_new[["age", "bmi", "smoker_yes", "sex_male", "age_smoke", "bmi_smoke", "sex_male_smoke", "age_sqr"]], df_new["charges"])
+
+print("Variables: age, bmi, smoker, sex, age * smoke, bmi * smoke, sex * smoke, age_sqr MSE:  " + str(mse_age_sex_bmi_smoke_interactions))
+print("Variables: age, bmi, smoker, sex, age * smoke, bmi * smoke, sex * smoke, age_sqr R2:  " + str(r2_age_sex_bmi_smoke_interactions))
+```
+
+
+```{python}
+age_sex_bmi_smoke_interactions = LinearRegression()
+age_sex_bmi_smoke_interactions.fit(
+    X=df[["age", "bmi", "smoker_yes", "sex_male", "age_smoke", "bmi_smoke", "age_sqr"]],
+    y=df["charges"]
+)
+
+y_predage_sex_bmi_smoke_interactions = age_sex_bmi_smoke_interactions.predict(df_new[["age", "bmi", "smoker_yes", "sex_male", "age_smoke", "bmi_smoke", "age_sqr"]])
+mse_age_sex_bmi_smoke_interactions = mean_squared_error(df_new["charges"], y_predage_sex_bmi_smoke_interactions)
+
+r2_age_sex_bmi_smoke_interactions = age_sex_bmi_smoke_interactions.score(df_new[["age", "bmi", "smoker_yes", "sex_male", "age_smoke", "bmi_smoke",  "age_sqr"]], df_new["charges"])
+
+print("Variables: age, bmi, smoker, sex, age * smoke, bmi * smoke, age_sqr MSE:  " + str(mse_age_sex_bmi_smoke_interactions))
+print("Variables: age, bmi, smoker, sex, age * smoke, bmi * smoke, age_sqr R2:  " + str(r2_age_sex_bmi_smoke_interactions))
+```
+
+After trying many other models with many other variables and interactions, I found the model computed in the last part of part 4 with age, bmi, and smoker as predictors, with both quantitative variables having an interaction term with smoker to be the best model. Altough I was able to get close I could not beat the R2 of 0.85948 or the MSE of 21786256. 
+
+```{python}
+(ggplot(df_new, aes(x="age", y="charges")) 
+    + geom_point(color="steelblue", alpha=0.6)  
+    + geom_line(aes(y="predicted"), color="red", alpha=0.6, size=1.2) 
+    + geom_segment( 
+        aes(xend="age", yend="predicted"),
+        color="gray", alpha=0.5
+    ) 
+    + labs(
+        title="Model Fit with Residuals ",
+        x="Age",
+        y="Charges"
+    )
+)
+```
