@@ -2202,13 +2202,13 @@ vertical-align: -.125em;
 
 <section id="part-1" class="level1">
 <h1>Part 1</h1>
-<div id="1bbcbf49" class="cell" data-execution_count="1">
+<div id="b10bab53" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>url <span class="op">=</span> <span class="st">&quot;https://www.dropbox.com/s/bocjjyo1ehr5auz/insurance_costs_1.csv?dl=1&quot;</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(url)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="31">
+<div class="cell-output cell-output-display" data-execution_count="61">
 <div>
 
 
@@ -2276,9 +2276,9 @@ vertical-align: -.125em;
 </div>
 </div>
 </div>
-<div id="ba4ae28d" class="cell" data-execution_count="2">
+<div id="9e9f726a" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>df.describe()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="32">
+<div class="cell-output cell-output-display" data-execution_count="62">
 <div>
 
 
@@ -2346,9 +2346,9 @@ vertical-align: -.125em;
 </div>
 </div>
 </div>
-<div id="6a22eca9" class="cell" data-execution_count="3">
+<div id="04972a02" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df.isnull().<span class="bu">sum</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="33">
+<div class="cell-output cell-output-display" data-execution_count="63">
 <pre><code>age        0
 sex        0
 bmi        0
@@ -2359,7 +2359,7 @@ dtype: int64</code></pre>
 </div>
 </div>
 <p>I do not have any concerns about the data</p>
-<div id="cd09622f" class="cell" data-execution_count="4">
+<div id="4ebd9edb" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotnine <span class="im">import</span> <span class="op">*</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>(ggplot(df, aes(x<span class="op">=</span><span class="st">&quot;bmi&quot;</span>, y<span class="op">=</span><span class="st">&quot;charges&quot;</span>))</span>
@@ -2381,7 +2381,7 @@ dtype: int64</code></pre>
 </div>
 </div>
 <p>This plot shows that as BMI incresaes, we also see a slight increase in Insurance costs.</p>
-<div id="29820f24" class="cell" data-execution_count="5">
+<div id="5c8bbc53" class="cell" data-execution_count="5">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>(ggplot(df, aes(x<span class="op">=</span><span class="st">&quot;age&quot;</span>, y<span class="op">=</span><span class="st">&quot;charges&quot;</span>))</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_point(alpha<span class="op">=</span><span class="fl">0.6</span>) </span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_smooth(method<span class="op">=</span><span class="st">&quot;lm&quot;</span>, color<span class="op">=</span><span class="st">&quot;red&quot;</span>) </span>
@@ -2401,7 +2401,7 @@ dtype: int64</code></pre>
 </div>
 </div>
 <p>This plot shows that as Age incresaes, we also see an increase in Insurance costs. This plot also shows that there appears to be a 3 distinct bands, potentally caused by number of insurance claims (0, 1, or 2). We can see that each distinct band increases with age basically linearly.</p>
-<div id="e3df4d6f" class="cell" data-execution_count="6">
+<div id="b74b9ffe" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>(ggplot(df, aes(x<span class="op">=</span><span class="st">&quot;smoker&quot;</span>, y<span class="op">=</span><span class="st">&quot;charges&quot;</span>))</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_point(alpha<span class="op">=</span><span class="fl">0.6</span>) </span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> labs(</span>
@@ -2425,7 +2425,7 @@ dtype: int64</code></pre>
 <h1>Part 2</h1>
 <section id="q1" class="level2">
 <h2 class="anchored" data-anchor-id="q1">Q1</h2>
-<div id="57e42267" class="cell" data-execution_count="7">
+<div id="ec4c0444" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LinearRegression</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2437,18 +2437,18 @@ dtype: int64</code></pre>
 <span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>model_age.coef_, model_age.intercept_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="37">
+<div class="cell-output cell-output-display" data-execution_count="67">
 <pre><code>(array([228.79904937]), np.float64(3611.758798507093))</code></pre>
 </div>
 </div>
-<div id="05cae652" class="cell" data-execution_count="8">
+<div id="331c7b4f" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>r2_age <span class="op">=</span> model_age.score(df[[<span class="st">&quot;age&quot;</span>]], df[<span class="st">&quot;charges&quot;</span>])</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>r2_age</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="38">
+<div class="cell-output cell-output-display" data-execution_count="68">
 <pre><code>0.09938105452062695</code></pre>
 </div>
 </div>
-<div id="cec5793c" class="cell" data-execution_count="9">
+<div id="936ace19" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>y_pred_age <span class="op">=</span> model_age.predict(df[[<span class="st">&quot;age&quot;</span>]])</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>mse_age <span class="op">=</span> mean_squared_error(df[<span class="st">&quot;charges&quot;</span>], y_pred_age)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -2457,10 +2457,10 @@ dtype: int64</code></pre>
 </section>
 <section id="q2" class="level2">
 <h2 class="anchored" data-anchor-id="q2">Q2</h2>
-<div id="3f5349d0" class="cell" data-execution_count="10">
+<div id="8c5db1e3" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&quot;sex_male&quot;</span>] <span class="op">=</span> (df[<span class="st">&quot;sex&quot;</span>] <span class="op">==</span> <span class="st">&quot;male&quot;</span>).astype(<span class="bu">int</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="83c984e0" class="cell" data-execution_count="11">
+<div id="b7669eda" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>model_sex <span class="op">=</span> LinearRegression()</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>model_sex.fit(</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    X<span class="op">=</span>df[[<span class="st">&quot;sex_male&quot;</span>]],</span>
@@ -2468,14 +2468,14 @@ dtype: int64</code></pre>
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>model_sex.coef_, model_sex.intercept_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="41">
+<div class="cell-output cell-output-display" data-execution_count="71">
 <pre><code>(array([790.28862184]), np.float64(11919.373162039996))</code></pre>
 </div>
 </div>
-<div id="84d6de6e" class="cell" data-execution_count="12">
+<div id="a4f5badd" class="cell" data-execution_count="12">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>r2_sex <span class="op">=</span> model_sex.score(df[[<span class="st">&quot;sex_male&quot;</span>]], df[<span class="st">&quot;charges&quot;</span>])</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>r2_sex</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="42">
+<div class="cell-output cell-output-display" data-execution_count="72">
 <pre><code>0.001107379656908658</code></pre>
 </div>
 </div>
@@ -2483,10 +2483,10 @@ dtype: int64</code></pre>
 </section>
 <section id="q3" class="level2">
 <h2 class="anchored" data-anchor-id="q3">Q3</h2>
-<div id="424747a3" class="cell" data-execution_count="13">
+<div id="585df66b" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&quot;smoker_yes&quot;</span>] <span class="op">=</span> (df[<span class="st">&quot;smoker&quot;</span>] <span class="op">==</span> <span class="st">&quot;yes&quot;</span>).astype(<span class="bu">int</span>)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="43">
+<div class="cell-output cell-output-display" data-execution_count="73">
 <div>
 
 
@@ -2633,7 +2633,7 @@ dtype: int64</code></pre>
 </div>
 </div>
 </div>
-<div id="79081c64" class="cell" data-execution_count="14">
+<div id="e66a7bce" class="cell" data-execution_count="14">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>model_smoke <span class="op">=</span> LinearRegression()</span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>model_smoke.fit(</span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    X<span class="op">=</span>df[[<span class="st">&quot;smoker_yes&quot;</span>]],</span>
@@ -2641,19 +2641,19 @@ dtype: int64</code></pre>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>model_smoke.coef_, model_smoke.intercept_</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="44">
+<div class="cell-output cell-output-display" data-execution_count="74">
 <pre><code>(array([23623.90500127]), np.float64(7528.467642293576))</code></pre>
 </div>
 </div>
-<div id="d13af684" class="cell" data-execution_count="15">
+<div id="0edf42d2" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>r2_smoke <span class="op">=</span> model_smoke.score(df[[<span class="st">&quot;smoker_yes&quot;</span>]], df[<span class="st">&quot;charges&quot;</span>])</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>r2_smoke</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="45">
+<div class="cell-output cell-output-display" data-execution_count="75">
 <pre><code>0.6389346108568914</code></pre>
 </div>
 </div>
 <p>The R^2 value of about 0.64 indicates that our model explains a considerable ammount of the variation. The coefficient of 23623 indicates that a smoker will have an expected charges value of 23623 more than a non-smoker. The intercept of 7528 implies that if someone is not a smoker, their expected charges is only $7528.</p>
-<div id="172bdd13" class="cell" data-execution_count="16">
+<div id="9b5f00a5" class="cell" data-execution_count="16">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2665,7 +2665,7 @@ dtype: int64</code></pre>
 <span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>mse_sex <span class="op">=</span> mean_squared_error(df[<span class="st">&quot;charges&quot;</span>], y_pred_sex)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="aa86c193" class="cell" data-execution_count="17">
+<div id="d4d269c0" class="cell" data-execution_count="17">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;Sex MSE: &quot;</span> <span class="op">+</span> <span class="bu">str</span>(mse_sex))</span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;Smoke MSE: &quot;</span> <span class="op">+</span> <span class="bu">str</span>(mse_smoke))</span>
 <span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">&quot;Sex R2: &quot;</span> <span class="op">+</span> <span class="bu">str</span>(r2_sex))</span>
@@ -2682,7 +2682,7 @@ Smoke R2: 0.6389346108568914</code></pre>
 </section>
 <section id="part-3" class="level1">
 <h1>Part 3</h1>
-<div id="3b2d5005" class="cell" data-execution_count="18">
+<div id="9d0a14bd" class="cell" data-execution_count="18">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>model_age_bmi <span class="op">=</span> LinearRegression()</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>model_age_bmi.fit(</span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    X<span class="op">=</span>df[[<span class="st">&quot;age&quot;</span>, <span class="st">&quot;bmi&quot;</span>]],</span>
@@ -2709,7 +2709,7 @@ Age and BMI as predictors R2: 0.12032144234129338</code></pre>
 <p>The model with age and the model with age and bmi are very similar. The MSE and R2 were both better for the model that included age and bmi</p>
 <section id="q2-1" class="level2">
 <h2 class="anchored" data-anchor-id="q2-1">Q2</h2>
-<div id="f408e919" class="cell" data-execution_count="19">
+<div id="43f02a7d" class="cell" data-execution_count="19">
 <div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&quot;age_sqr&quot;</span>] <span class="op">=</span> df[<span class="st">&quot;age&quot;</span>] <span class="op">**</span> <span class="dv">2</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>model_age_sqr <span class="op">=</span> LinearRegression()</span>
@@ -2735,7 +2735,7 @@ Age and Age^2 R2: 0.09958694669946933</code></pre>
 </section>
 <section id="q3-1" class="level2">
 <h2 class="anchored" data-anchor-id="q3-1">Q3</h2>
-<div id="6d69e8a9" class="cell" data-execution_count="20">
+<div id="fa29b750" class="cell" data-execution_count="20">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> PolynomialFeatures</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>poly <span class="op">=</span> PolynomialFeatures(degree <span class="op">=</span> <span class="dv">4</span>, include_bias <span class="op">=</span> <span class="va">False</span>)</span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>X_poly4 <span class="op">=</span> poly.fit_transform(df[[<span class="st">&quot;age&quot;</span>]])</span>
@@ -2762,7 +2762,7 @@ Age 4th degree R2: 0.10782931453183786</code></pre>
 </section>
 <section id="q4" class="level2">
 <h2 class="anchored" data-anchor-id="q4">Q4</h2>
-<div id="c0aefe51" class="cell" data-execution_count="21">
+<div id="645dca87" class="cell" data-execution_count="21">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>poly <span class="op">=</span> PolynomialFeatures(degree <span class="op">=</span> <span class="dv">12</span>, include_bias <span class="op">=</span> <span class="va">False</span>)</span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>X_poly12 <span class="op">=</span> poly.fit_transform(df[[<span class="st">&quot;age&quot;</span>]])</span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2792,7 +2792,7 @@ Age 12th degree R2: 0.10734541968548872</code></pre>
 </section>
 <section id="q6" class="level2">
 <h2 class="anchored" data-anchor-id="q6">Q6</h2>
-<div id="f9d32732" class="cell" data-execution_count="22">
+<div id="8b7d215e" class="cell" data-execution_count="22">
 <div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>(ggplot(df, aes(x<span class="op">=</span><span class="st">&quot;age&quot;</span>, y<span class="op">=</span><span class="st">&quot;charges&quot;</span>)) </span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_point(alpha<span class="op">=</span><span class="fl">0.6</span>, color<span class="op">=</span><span class="st">&quot;gray&quot;</span>) </span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_line(aes(y<span class="op">=</span><span class="st">&quot;y_pred_age_poly12&quot;</span>), color<span class="op">=</span><span class="st">&quot;blue&quot;</span>, size<span class="op">=</span><span class="fl">1.2</span>) </span>
@@ -2814,7 +2814,7 @@ Age 12th degree R2: 0.10734541968548872</code></pre>
 </section>
 <section id="part-4" class="level1">
 <h1>Part 4</h1>
-<div id="0a59df61" class="cell" data-execution_count="23">
+<div id="d07f0aad" class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>url_train <span class="op">=</span> <span class="st">&quot;https://www.dropbox.com/s/bocjjyo1ehr5auz/insurance_costs_1.csv?dl=1&quot;</span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>url_test <span class="op">=</span> <span class="st">&quot;https://www.dropbox.com/s/sky86agc4s8c6qe/insurance_costs_2.csv?dl=1&quot;</span></span>
@@ -2822,7 +2822,7 @@ Age 12th degree R2: 0.10734541968548872</code></pre>
 <span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(url_train)</span>
 <span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>df_new <span class="op">=</span> pd.read_csv(url_test)</span>
 <span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>df_new.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-display" data-execution_count="53">
+<div class="cell-output cell-output-display" data-execution_count="83">
 <div>
 
 
@@ -2890,7 +2890,7 @@ Age 12th degree R2: 0.10734541968548872</code></pre>
 </div>
 </div>
 </div>
-<div id="d3029e68" class="cell" data-execution_count="24">
+<div id="85c1c89b" class="cell" data-execution_count="24">
 <div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>y_pred_age_new <span class="op">=</span> model_age.predict(df_new[[<span class="st">&quot;age&quot;</span>]])</span>
 <span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>r2_age_new <span class="op">=</span> model_age.score(df_new[[<span class="st">&quot;age&quot;</span>]], df_new[<span class="st">&quot;charges&quot;</span>])</span>
 <span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>mse_age_new <span class="op">=</span> mean_squared_error(df_new[<span class="st">&quot;charges&quot;</span>], y_pred_age_new)</span>
@@ -2915,7 +2915,7 @@ Age 12th degree R2: 0.10734541968548872</code></pre>
 <span id="cb36-22"><a href="#cb36-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb36-23"><a href="#cb36-23" aria-hidden="true" tabindex="-1"></a>r2_age_bmi <span class="op">=</span> model_age_bmi_smoke.score(df_new[[<span class="st">&quot;age&quot;</span>, <span class="st">&quot;bmi&quot;</span>, <span class="st">&quot;smoker_yes&quot;</span>]], df_new[<span class="st">&quot;charges&quot;</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="85e1cf06" class="cell" data-execution_count="25">
+<div id="5557cf1a" class="cell" data-execution_count="25">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&quot;age_smoke&quot;</span>] <span class="op">=</span> df[<span class="st">&quot;age&quot;</span>] <span class="op">*</span> df[<span class="st">&quot;smoker_yes&quot;</span>]</span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&quot;bmi_smoke&quot;</span>] <span class="op">=</span> df[<span class="st">&quot;bmi&quot;</span>] <span class="op">*</span> df[<span class="st">&quot;smoker_yes&quot;</span>]</span>
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -2959,7 +2959,7 @@ Age, bmi, smoke, age_smoke, and bmi_smoke:  21786256.866852593</code></pre>
 </div>
 </div>
 <p>I got the model with age, bmi, and smokeras predictors, with both quantitative variables having an interaction term with smoker as the best model.</p>
-<div id="93bd6c92" class="cell" data-execution_count="26">
+<div id="d56768c5" class="cell" data-execution_count="26">
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>df_new[<span class="st">&quot;predicted&quot;</span>] <span class="op">=</span> model_age_bmi_smoke_interact.predict(df_new[[<span class="st">&quot;age&quot;</span>, <span class="st">&quot;bmi&quot;</span>, <span class="st">&quot;smoker_yes&quot;</span>, <span class="st">&quot;age_smoke&quot;</span>, <span class="st">&quot;bmi_smoke&quot;</span>]])</span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>df_new <span class="op">=</span> df_new.sort_values(<span class="st">&quot;age&quot;</span>)</span>
@@ -2989,7 +2989,7 @@ Age, bmi, smoke, age_smoke, and bmi_smoke:  21786256.866852593</code></pre>
 </section>
 <section id="part-5" class="level1">
 <h1>Part 5</h1>
-<div id="c5440ca6" class="cell" data-execution_count="27">
+<div id="fda700e8" class="cell" data-execution_count="27">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&quot;sex_male&quot;</span>] <span class="op">=</span> (df[<span class="st">&quot;sex&quot;</span>] <span class="op">==</span> <span class="st">&quot;male&quot;</span>).astype(<span class="bu">int</span>)</span>
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>df_new[<span class="st">&quot;sex_male&quot;</span>] <span class="op">=</span> (df_new[<span class="st">&quot;sex&quot;</span>] <span class="op">==</span> <span class="st">&quot;male&quot;</span>).astype(<span class="bu">int</span>)</span>
 <span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&quot;sex_male_smoke&quot;</span>] <span class="op">=</span> df[<span class="st">&quot;sex_male&quot;</span>] <span class="op">*</span> df[<span class="st">&quot;smoker_yes&quot;</span>]</span>
@@ -3014,7 +3014,7 @@ Age, bmi, smoke, age_smoke, and bmi_smoke:  21786256.866852593</code></pre>
 Variables: age, bmi, smoker, sex, age * smoke, bmi * smoke, sex * smoke R2:  0.8585643747045506</code></pre>
 </div>
 </div>
-<div id="a187103c" class="cell" data-execution_count="28">
+<div id="dd644f94" class="cell" data-execution_count="28">
 <div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>df[<span class="st">&quot;age_sqr&quot;</span>] <span class="op">=</span> df[<span class="st">&quot;age&quot;</span>] <span class="op">**</span> <span class="dv">2</span></span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>df_new[<span class="st">&quot;age_sqr&quot;</span>] <span class="op">=</span> df_new[<span class="st">&quot;age&quot;</span>] <span class="op">**</span> <span class="dv">2</span></span>
 <span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -3038,7 +3038,7 @@ Variables: age, bmi, smoker, sex, age * smoke, bmi * smoke, sex * smoke R2:  0.8
 Variables: age, bmi, smoker, sex, age * smoke, bmi * smoke, sex * smoke, age_sqr R2:  0.8592145390369847</code></pre>
 </div>
 </div>
-<div id="3537d151" class="cell" data-execution_count="29">
+<div id="e315b7f7" class="cell" data-execution_count="29">
 <div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>age_sex_bmi_smoke_interactions <span class="op">=</span> LinearRegression()</span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>age_sex_bmi_smoke_interactions.fit(</span>
 <span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    X<span class="op">=</span>df[[<span class="st">&quot;age&quot;</span>, <span class="st">&quot;bmi&quot;</span>, <span class="st">&quot;smoker_yes&quot;</span>, <span class="st">&quot;sex_male&quot;</span>, <span class="st">&quot;age_smoke&quot;</span>, <span class="st">&quot;bmi_smoke&quot;</span>, <span class="st">&quot;age_sqr&quot;</span>]],</span>
@@ -3058,7 +3058,7 @@ Variables: age, bmi, smoker, sex, age * smoke, bmi * smoke, age_sqr R2:  0.85882
 </div>
 </div>
 <p>After trying many other models with many other variables and interactions, I found the model computed in the last part of part 4 with age, bmi, and smoker as predictors, with both quantitative variables having an interaction term with smoker to be the best model. Altough I was able to get close I could not beat the R2 of 0.85948 or the MSE of 21786256.</p>
-<div id="a4a332bc" class="cell" data-execution_count="30">
+<div id="044af483" class="cell" data-execution_count="30">
 <div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>(ggplot(df_new, aes(x<span class="op">=</span><span class="st">&quot;age&quot;</span>, y<span class="op">=</span><span class="st">&quot;charges&quot;</span>)) </span>
 <span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_point(color<span class="op">=</span><span class="st">&quot;steelblue&quot;</span>, alpha<span class="op">=</span><span class="fl">0.6</span>)  </span>
 <span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> geom_line(aes(y<span class="op">=</span><span class="st">&quot;predicted&quot;</span>), color<span class="op">=</span><span class="st">&quot;red&quot;</span>, alpha<span class="op">=</span><span class="fl">0.6</span>, size<span class="op">=</span><span class="fl">1.2</span>) </span>
