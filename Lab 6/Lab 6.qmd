@@ -1,0 +1,1211 @@
+---
+title: "Lab 6"
+format:
+  html:
+    embed-resources: true
+code-fold: false
+---
+# Part 1
+## A Linear
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+from sklearn.model_selection import cross_val_score
+import pandas as pd
+from sklearn.pipeline import make_pipeline
+from sklearn.compose import ColumnTransformer
+pd.options.display.float_format = '{:.2f}'.format
+
+```
+```{python}
+df = pd.read_csv("/Users/kellogg/Downloads/Cal Poly 5th Year/Machine-Learning-Class-Git/Lab 6/Hitters.csv")
+```
+
+```{python}
+df_clean = df.dropna()
+df_clean
+```
+
+
+```{python}
+X = df_clean.drop(columns=['Salary'])
+y = df_clean['Salary']
+
+X_test, X_train, y_test, y_train = train_test_split(X, y, train_size=0.8, random_state=321)
+
+```
+
+```{python}
+ct = ColumnTransformer(
+  [
+    ("dummify", OneHotEncoder(sparse_output = False), ["League", "Division", "NewLeague"]),
+    ("standardize", StandardScaler(), ["AtBat", "Hits", "HmRun", "Runs", "RBI", "Walks", "Years", "CAtBat", "CHits", "CHmRun", "CRuns", "CRBI", "CWalks", "PutOuts", "Assists", "Errors"])
+  ],
+  remainder = "passthrough"
+)
+
+lr_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("linear_regression", LinearRegression())]
+)
+
+lr_pipeline
+
+lr_pipeline_fitted = lr_pipeline.fit(X_train, y_train)
+
+y_preds = lr_pipeline_fitted.predict(X_test)
+
+from sklearn.metrics import mean_squared_error
+
+mse1 = mean_squared_error(y_test, y_preds)
+mse1
+```
+
+```{python}
+model_lr = lr_pipeline.named_steps["linear_regression"]
+feature_names = lr_pipeline[:-1].get_feature_names_out()
+coefficients = model_lr.coef_
+lr_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+lr_coef_df = lr_coef_df.sort_values(by='coefficient', ascending=False)
+
+lr_coef_df
+```
+
+```{python}
+model_lr.intercept_
+```
+
+<span style="color: red;">
+The 5 most important predictors are CHits, AtBat, Years, CAtBat, and ChmRun. This means that for each additional hit througout a career we are predicting an increase in salary of 750. The -366 coefficient for AtBat indicates that for each at bat during 1986, we expect to see a drop in salary of 366. The -292 coeficient for years indicates that we see a negative correlation between numebr of years in the MLB and salary. 
+</span>
+
+<span style="color: red;">
+The reason I looked at the absolute value is becasue the higher absolute value number indicates more of an effect, regardless of if it is posative or negative.
+</span>
+
+<span style="color: red;">
+The intercept of 491 indicates that if all preductor variables were 0, we would expect a salary of 491. 
+</span>
+
+
+```{python}
+scores = cross_val_score(lr_pipeline, X, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse1}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## B Ridge
+```{python}
+ridge_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("ridge_regression", Ridge(alpha=1))]
+)
+from sklearn.model_selection import GridSearchCV
+
+alphas = {'ridge_regression__alpha': np.array([0.001, 0.01, 0.1, 1, 10])}
+
+gscv = GridSearchCV(ridge_pipeline, param_grid=alphas, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 10
+</span>
+
+```{python}
+ridge_pipeline.set_params(ridge_regression__alpha=10)
+ridge_pipeline.fit(X_train, y_train)
+```
+
+```{python}
+model_ridge = ridge_pipeline.named_steps["ridge_regression"]
+feature_names = ridge_pipeline[:-1].get_feature_names_out()
+coefficients = model_ridge.coef_
+ridge_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+ridge_coef_df = ridge_coef_df.sort_values(by='coefficient', ascending=False)
+
+ridge_coef_df
+```
+
+<span style="color: red;">
+The 5 most important predictors are Years, CRBI, AtBat, Error, and CRuns. We are predicting that each additional year leads to a -111 in predicted salary. The AtBat and Errors coefficients are -97 and -95. This means we are predicting lower values of salary with each increase in AtBat or Error. 
+</span>
+
+
+```{python}
+ridge_pipeline
+
+ridge_pipeline_fitted = ridge_pipeline.fit(X_train, y_train)
+
+y_preds = ridge_pipeline_fitted.predict(X_test)
+
+
+mse2 = mean_squared_error(y_test, y_preds)
+mse2
+scores = cross_val_score(ridge_pipeline, X, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse2}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+
+## C Lasso
+
+
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+lasso_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("lasso_regression", Lasso(alpha=1))]
+)
+
+alphas = {'lasso_regression__alpha': np.array([100, 10, 1, 0.1, 0.01])}
+
+gscv = GridSearchCV(lasso_pipeline, param_grid=alphas, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 10
+</span>
+
+
+```{python}
+lasso_pipeline.set_params(lasso_regression__alpha=10)
+lasso_pipeline.fit(X_train, y_train)
+```
+
+
+```{python}
+model_lasso = lasso_pipeline.named_steps["lasso_regression"]
+feature_names = lasso_pipeline[:-1].get_feature_names_out()
+coefficients = model_lasso.coef_
+lasso_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+lasso_coef_df = lasso_coef_df.sort_values(by='coefficient', ascending=False)
+
+lasso_coef_df
+```
+
+<span style="color: red;">
+The 5 most important predictors are Years, CRBI, CHits, Division_E and AtBat. We are predicting that each additional year leads to a -214 in predicted salary. The CRBI coefficient is 184, this means we are predicting an increase of 184 in salary for each additional RBI. The CHits coefficient is 162, meaning we are predicting an increase in salary for each additional at hit. 
+</span>
+
+```{python}
+lasso_pipeline
+
+lasso_pipeline_fitted = lasso_pipeline.fit(X_train, y_train)
+
+y_preds = lasso_pipeline_fitted.predict(X_test)
+
+mse3 = mean_squared_error(y_test, y_preds)
+mse3
+scores = cross_val_score(lasso_pipeline, X, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse3}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## D Elastic
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+
+elastic_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("elastic_net", ElasticNet(alpha=1, l1_ratio=0.5))]
+)
+
+param_grid = {
+    "elastic_net__alpha": [1, 10, 100],
+    "elastic_net__l1_ratio": np.arange(0.0, 1.2, 0.2),
+}
+
+gscv = GridSearchCV(elastic_pipeline, param_grid, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 1, and best l1 ratio is 0.2.
+</span>
+
+
+```{python}
+elastic_pipeline.set_params(elastic_net__alpha=1, elastic_net__l1_ratio=.2)
+elastic_pipeline.fit(X_train, y_train)
+```
+
+
+```{python}
+model_elastic = elastic_pipeline.named_steps["elastic_net"]
+feature_names = elastic_pipeline[:-1].get_feature_names_out()
+coefficients = model_elastic.coef_
+elastic_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+elastic_coef_df = elastic_coef_df.sort_values(by='coefficient', ascending=False)
+
+elastic_coef_df
+```
+
+<span style="color: red;">
+The 5 most important predictors are CRBI, CHmRun, CRuns, CHits, and Errors. Respectivly, the coefficients of 55, 48, 47, 45, and -40 indicate that for each 1 unit increase for the given coefficient we can expect to see the corresponding increase/decrease in predicted salary. 
+</span>
+
+```{python}
+elastic_pipeline
+
+elastic_pipeline_fitted = elastic_pipeline.fit(X_train, y_train)
+
+y_preds = elastic_pipeline_fitted.predict(X_test)
+
+mse4 = mean_squared_error(y_test, y_preds)
+mse4
+scores = cross_val_score(elastic_pipeline, X, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse4}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+# Part 2
+
+<span style="color: red;">
+The most important numeric variable CRBI. I determined this becasue it was in the top 5 for 3 of the 4 models created above and was 2nd most important in the elastic net model. 
+</span>
+
+<span style="color: red;">
+The 5 most important numeric variables are CRBI, Years, AtBat, CHits, and Errors. I determined this because these variables were consistently in the top 5 most important variables for the 4 differnt models. 
+</span>
+
+<span style="color: red;">
+The most important categorical variable was Division. This was evident as it consistently outpreformed the other categorical variables. 
+</span>
+
+
+## 1 Variable Linear
+```{python}
+X_p2 = X[['CRBI']]
+y = df_clean['Salary']
+
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321
+)
+
+```
+
+```{python}
+ct = ColumnTransformer(
+  [("standardize", StandardScaler(), ["CRBI"])],
+  remainder = "passthrough"
+)
+
+lr_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("linear_regression", LinearRegression())]
+)
+
+lr_pipeline
+
+lr_pipeline_fitted = lr_pipeline.fit(X_train, y_train)
+
+y_preds = lr_pipeline_fitted.predict(X_test)
+
+from sklearn.metrics import mean_squared_error
+
+mse1 = mean_squared_error(y_test, y_preds)
+mse1
+```
+
+```{python}
+model_lr = lr_pipeline.named_steps["linear_regression"]
+feature_names = lr_pipeline[:-1].get_feature_names_out()
+coefficients = model_lr.coef_
+lr_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+lr_coef_df = lr_coef_df.sort_values(by='coefficient', ascending=False)
+
+lr_coef_df
+```
+
+```{python}
+model_lr.intercept_
+```
+
+```{python}
+scores = cross_val_score(lr_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse1}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 5 Variables Linear
+
+```{python}
+X_p2 = X[["CRBI", "Years", "AtBat", "CHits", "Errors"]]
+y = df_clean['Salary']
+
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+
+```
+
+```{python}
+ct = ColumnTransformer(
+  [("standardize", StandardScaler(), ["CRBI", "Years", "AtBat", "CHits", "Errors"])],
+  remainder = "passthrough"
+)
+
+lr_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("linear_regression", LinearRegression())]
+)
+
+lr_pipeline
+
+lr_pipeline_fitted = lr_pipeline.fit(X_train, y_train)
+
+y_preds = lr_pipeline_fitted.predict(X_test)
+
+from sklearn.metrics import mean_squared_error
+
+mse2 = mean_squared_error(y_test, y_preds)
+mse2
+```
+
+```{python}
+model_lr = lr_pipeline.named_steps["linear_regression"]
+feature_names = lr_pipeline[:-1].get_feature_names_out()
+coefficients = model_lr.coef_
+lr_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+lr_coef_df = lr_coef_df.sort_values(by='coefficient', ascending=False)
+
+lr_coef_df
+```
+
+```{python}
+model_lr.intercept_
+```
+
+```{python}
+scores = cross_val_score(lr_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse2}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 5 Variables with Interaction Linear
+```{python}
+X_p2 = X[["CRBI", "Years", "AtBat", "CHits", "Errors", "Division"]]
+y = df_clean['Salary']
+
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+
+```
+
+```{python}
+ct = ColumnTransformer(
+  [("dummify", OneHotEncoder(sparse_output = False), ["Division"]),
+    ("standardize", StandardScaler(), ["CRBI", "Years", "AtBat", "CHits", "Errors"])],
+  remainder = "passthrough"
+)
+
+lr_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("interaction", PolynomialFeatures(interaction_only=True, include_bias=False)),
+  ("linear_regression", LinearRegression())]
+)
+
+lr_pipeline
+
+lr_pipeline_fitted = lr_pipeline.fit(X_train, y_train)
+
+y_preds = lr_pipeline_fitted.predict(X_test)
+
+from sklearn.metrics import mean_squared_error
+
+mse3 = mean_squared_error(y_test, y_preds)
+mse3
+```
+
+```{python}
+model_lr = lr_pipeline.named_steps["linear_regression"]
+feature_names = lr_pipeline[:-1].get_feature_names_out()
+coefficients = model_lr.coef_
+lr_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+lr_coef_df = lr_coef_df.sort_values(by='coefficient', ascending=False)
+
+lr_coef_df
+```
+
+```{python}
+model_lr.intercept_
+```
+
+```{python}
+scores = cross_val_score(lr_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse3}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 1 Variable Ridge
+
+```{python}
+X_p2 = X[["CRBI"]]
+y = df_clean['Salary']
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+```
+```{python}
+
+ct = ColumnTransformer(
+  [("standardize", StandardScaler(), ["CRBI"])],
+  remainder = "passthrough"
+)
+
+ridge_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("ridge_regression", Ridge(alpha=1))]
+)
+from sklearn.model_selection import GridSearchCV
+
+alphas = {'ridge_regression__alpha': np.array([0.001, 0.01, 0.1, 1, 10])}
+
+gscv = GridSearchCV(ridge_pipeline, param_grid=alphas, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X_p2, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 10
+</span>
+
+
+```{python}
+ridge_pipeline.set_params(ridge_regression__alpha=10)
+ridge_pipeline.fit(X_train, y_train)
+```
+
+```{python}
+model_ridge = ridge_pipeline.named_steps["ridge_regression"]
+feature_names = ridge_pipeline[:-1].get_feature_names_out()
+coefficients = model_ridge.coef_
+ridge_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+ridge_coef_df = ridge_coef_df.sort_values(by='coefficient', ascending=False)
+
+ridge_coef_df
+```
+
+```{python}
+ridge_pipeline
+
+ridge_pipeline_fitted = ridge_pipeline.fit(X_train, y_train)
+
+y_preds = ridge_pipeline_fitted.predict(X_test)
+
+
+mse2 = mean_squared_error(y_test, y_preds)
+mse2
+scores = cross_val_score(ridge_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse2}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 5 Variable Ridge
+
+```{python}
+X_p2 = X[["CRBI", "Years", "AtBat", "CHits", "Errors"]]
+y = df_clean['Salary']
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+```
+```{python}
+
+ct = ColumnTransformer(
+  [("standardize", StandardScaler(), ["CRBI", "Years", "AtBat", "CHits", "Errors"])],
+  remainder = "passthrough"
+)
+
+ridge_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("ridge_regression", Ridge(alpha=1))]
+)
+from sklearn.model_selection import GridSearchCV
+
+alphas = {'ridge_regression__alpha': np.array([0.001, 0.01, 0.1, 1, 10])}
+
+gscv = GridSearchCV(ridge_pipeline, param_grid=alphas, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X_p2, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 10
+<span style="color: red;"></span>
+
+
+```{python}
+ridge_pipeline.set_params(ridge_regression__alpha=10)
+ridge_pipeline.fit(X_train, y_train)
+```
+
+```{python}
+model_ridge = ridge_pipeline.named_steps["ridge_regression"]
+feature_names = ridge_pipeline[:-1].get_feature_names_out()
+coefficients = model_ridge.coef_
+ridge_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+ridge_coef_df = ridge_coef_df.sort_values(by='coefficient', ascending=False)
+
+ridge_coef_df
+```
+
+```{python}
+ridge_pipeline
+
+ridge_pipeline_fitted = ridge_pipeline.fit(X_train, y_train)
+
+y_preds = ridge_pipeline_fitted.predict(X_test)
+
+
+mse2 = mean_squared_error(y_test, y_preds)
+mse2
+scores = cross_val_score(ridge_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse2}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 5 Variable Interaction Ridge
+
+```{python}
+X_p2 = X[["CRBI", "Years", "AtBat", "CHits", "Errors", "Division"]]
+y = df_clean['Salary']
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+```
+```{python}
+
+ct = ColumnTransformer(
+  [("dummify", OneHotEncoder(sparse_output = False), ["Division"]),
+    ("standardize", StandardScaler(), ["CRBI", "Years", "AtBat", "CHits", "Errors"])],
+  remainder = "passthrough"
+)
+
+ridge_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("interaction", PolynomialFeatures(interaction_only=True, include_bias=False)),
+  ("ridge_regression", Ridge(alpha=1))]
+)
+from sklearn.model_selection import GridSearchCV
+
+alphas = {'ridge_regression__alpha': np.array([0.001, 0.01, 0.1, 1, 10])}
+
+gscv = GridSearchCV(ridge_pipeline, param_grid=alphas, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X_p2, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 10
+</span>
+
+
+```{python}
+ridge_pipeline.set_params(ridge_regression__alpha=10)
+ridge_pipeline.fit(X_train, y_train)
+```
+
+```{python}
+model_ridge = ridge_pipeline.named_steps["ridge_regression"]
+feature_names = ridge_pipeline[:-1].get_feature_names_out()
+coefficients = model_ridge.coef_
+ridge_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+ridge_coef_df = ridge_coef_df.sort_values(by='coefficient', ascending=False)
+
+ridge_coef_df
+```
+
+```{python}
+ridge_pipeline
+
+ridge_pipeline_fitted = ridge_pipeline.fit(X_train, y_train)
+
+y_preds = ridge_pipeline_fitted.predict(X_test)
+
+mse2 = mean_squared_error(y_test, y_preds)
+mse2
+scores = cross_val_score(ridge_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse2}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 1 Variable Lasso
+
+```{python}
+X_p2 = X[["CRBI"]]
+y = df_clean['Salary']
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+```
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+ct = ColumnTransformer(
+  [("standardize", StandardScaler(), ["CRBI"])],
+  remainder = "passthrough"
+)
+
+lasso_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("lasso_regression", Lasso(alpha=1))]
+)
+
+alphas = {'lasso_regression__alpha': np.array([100, 10, 1, 0.1, 0.01])}
+
+gscv = GridSearchCV(lasso_pipeline, param_grid=alphas, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X_p2, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 10
+</span>
+
+
+```{python}
+lasso_pipeline.set_params(lasso_regression__alpha=10)
+lasso_pipeline.fit(X_train, y_train)
+```
+
+
+```{python}
+model_lasso = lasso_pipeline.named_steps["lasso_regression"]
+feature_names = lasso_pipeline[:-1].get_feature_names_out()
+coefficients = model_lasso.coef_
+lasso_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+lasso_coef_df = lasso_coef_df.sort_values(by='coefficient', ascending=False)
+
+lasso_coef_df
+```
+
+```{python}
+lasso_pipeline
+
+lasso_pipeline_fitted = lasso_pipeline.fit(X_train, y_train)
+
+y_preds = lasso_pipeline_fitted.predict(X_test)
+
+mse3 = mean_squared_error(y_test, y_preds)
+mse3
+scores = cross_val_score(lasso_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse3}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 5 Variable Lasso
+
+```{python}
+X_p2 = X[["CRBI", "Years", "AtBat", "CHits", "Errors"]]
+y = df_clean['Salary']
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+```
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+ct = ColumnTransformer(
+  [("standardize", StandardScaler(), ["CRBI", "Years", "AtBat", "CHits", "Errors"])],
+  remainder = "passthrough"
+)
+
+lasso_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("lasso_regression", Lasso(alpha=1))]
+)
+
+alphas = {'lasso_regression__alpha': np.array([100, 10, 1, 0.1, 0.01])}
+
+gscv = GridSearchCV(lasso_pipeline, param_grid=alphas, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X_p2, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 1
+</span>
+
+
+```{python}
+lasso_pipeline.set_params(lasso_regression__alpha=1)
+lasso_pipeline.fit(X_train, y_train)
+```
+
+
+```{python}
+model_lasso = lasso_pipeline.named_steps["lasso_regression"]
+feature_names = lasso_pipeline[:-1].get_feature_names_out()
+coefficients = model_lasso.coef_
+lasso_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+lasso_coef_df = lasso_coef_df.sort_values(by='coefficient', ascending=False)
+
+lasso_coef_df
+```
+
+```{python}
+lasso_pipeline
+
+lasso_pipeline_fitted = lasso_pipeline.fit(X_train, y_train)
+
+y_preds = lasso_pipeline_fitted.predict(X_test)
+
+mse3 = mean_squared_error(y_test, y_preds)
+mse3
+scores = cross_val_score(lasso_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse3}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 5 Variable Interaction Lasso
+
+```{python}
+X_p2 = X[["CRBI", "Years", "AtBat", "CHits", "Errors", "Division"]]
+y = df_clean['Salary']
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+```
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+ct = ColumnTransformer(
+  [("dummify", OneHotEncoder(sparse_output = False), ["Division"]),
+    ("standardize", StandardScaler(), ["CRBI", "Years", "AtBat", "CHits", "Errors"])],
+  remainder = "passthrough"
+)
+
+lasso_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("interaction", PolynomialFeatures(interaction_only=True, include_bias=False)),
+  ("lasso_regression", Lasso(alpha=1))]
+)
+
+alphas = {'lasso_regression__alpha': np.array([100, 10, 1, 0.1, 0.01])}
+
+gscv = GridSearchCV(lasso_pipeline, param_grid=alphas, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X_p2, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 0.01
+</span>
+
+
+```{python}
+lasso_pipeline.set_params(lasso_regression__alpha=0.01)
+lasso_pipeline.fit(X_train, y_train)
+```
+
+
+```{python}
+model_lasso = lasso_pipeline.named_steps["lasso_regression"]
+feature_names = lasso_pipeline[:-1].get_feature_names_out()
+coefficients = model_lasso.coef_
+lasso_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+lasso_coef_df = lasso_coef_df.sort_values(by='coefficient', ascending=False)
+
+lasso_coef_df
+```
+
+```{python}
+lasso_pipeline
+
+lasso_pipeline_fitted = lasso_pipeline.fit(X_train, y_train)
+
+y_preds = lasso_pipeline_fitted.predict(X_test)
+
+mse3 = mean_squared_error(y_test, y_preds)
+mse3
+scores = cross_val_score(lasso_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse3}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 1 Variable Elastic 
+
+```{python}
+X_p2 = X[["CRBI"]]
+y = df_clean['Salary']
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+```
+
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+ct = ColumnTransformer(
+  [("standardize", StandardScaler(), ["CRBI"])],
+  remainder = "passthrough"
+)
+
+elastic_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("elastic_net", ElasticNet(alpha=1, l1_ratio=0.5))]
+)
+
+param_grid = {
+    "elastic_net__alpha": [1, 10, 100],
+    "elastic_net__l1_ratio": np.arange(0.0, 1.2, 0.2),
+}
+
+gscv = GridSearchCV(elastic_pipeline, param_grid, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X_p2, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 10, and best l1 ratio is 1.
+</span>
+
+
+```{python}
+elastic_pipeline.set_params(elastic_net__alpha=10, elastic_net__l1_ratio=1)
+elastic_pipeline.fit(X_train, y_train)
+```
+
+
+```{python}
+model_elastic = elastic_pipeline.named_steps["elastic_net"]
+feature_names = elastic_pipeline[:-1].get_feature_names_out()
+coefficients = model_elastic.coef_
+elastic_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+elastic_coef_df = elastic_coef_df.sort_values(by='coefficient', ascending=False)
+
+elastic_coef_df
+```
+
+```{python}
+elastic_pipeline
+
+elastic_pipeline_fitted = elastic_pipeline.fit(X_train, y_train)
+
+y_preds = elastic_pipeline_fitted.predict(X_test)
+
+mse4 = mean_squared_error(y_test, y_preds)
+mse4
+scores = cross_val_score(elastic_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse4}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 5 Variable Elastic 
+
+```{python}
+X_p2 = X[["CRBI", "Years", "AtBat", "CHits", "Errors"]]
+y = df_clean['Salary']
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+```
+
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+ct = ColumnTransformer(
+  [("standardize", StandardScaler(), ["CRBI", "Years", "AtBat", "CHits", "Errors"])],
+  remainder = "passthrough"
+)
+
+lasso_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("lasso_regression", Lasso(alpha=1))]
+)
+
+
+param_grid = {
+    "elastic_net__alpha": [1, 10, 100],
+    "elastic_net__l1_ratio": np.arange(0.0, 1.2, 0.2),
+}
+
+gscv = GridSearchCV(elastic_pipeline, param_grid, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X_p2, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 1, and best l1 ratio is 1.
+</span>
+
+
+```{python}
+elastic_pipeline.set_params(elastic_net__alpha=1, elastic_net__l1_ratio=1)
+elastic_pipeline.fit(X_train, y_train)
+```
+
+
+```{python}
+model_elastic = elastic_pipeline.named_steps["elastic_net"]
+feature_names = elastic_pipeline[:-1].get_feature_names_out()
+coefficients = model_elastic.coef_
+elastic_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+elastic_coef_df = elastic_coef_df.sort_values(by='coefficient', ascending=False)
+
+elastic_coef_df
+```
+
+```{python}
+elastic_pipeline
+
+elastic_pipeline_fitted = elastic_pipeline.fit(X_train, y_train)
+
+y_preds = elastic_pipeline_fitted.predict(X_test)
+
+mse4 = mean_squared_error(y_test, y_preds)
+mse4
+scores = cross_val_score(elastic_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse4}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+## 5 Variable Elastic Interaction
+
+```{python}
+X_p2 = X[["CRBI", "Years", "AtBat", "CHits", "Errors", "Division"]]
+y = df_clean['Salary']
+X_test, X_train, y_test, y_train = train_test_split(X_p2, y, train_size=0.8, random_state=321)
+```
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+ct = ColumnTransformer(
+  [("dummify", OneHotEncoder(sparse_output = False), ["Division"]),
+    ("standardize", StandardScaler(), ["CRBI", "Years", "AtBat", "CHits", "Errors"])],
+  remainder = "passthrough"
+)
+
+elastic_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("interaction", PolynomialFeatures(interaction_only=True, include_bias=False)),
+  ("elastic_net", ElasticNet(alpha=1, l1_ratio=0.5))]
+)
+
+param_grid = {
+    "elastic_net__alpha": [1, 10, 100],
+    "elastic_net__l1_ratio": np.arange(0.0, 1.2, 0.2),
+}
+```
+
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+gscv = GridSearchCV(elastic_pipeline, param_grid, cv = 5, scoring='r2')
+gscv_fitted = gscv.fit(X_p2, y)
+
+df_cv_results_ = pd.DataFrame(gscv_fitted.cv_results_)
+
+df_cv_results_
+```
+
+<span style="color: red;">
+Based on our hyperparameter tuning the best value for alpha is 1, and best l1 ratio is 0.8.
+</span>
+
+
+```{python}
+elastic_pipeline.set_params(elastic_net__alpha=1, elastic_net__l1_ratio=.8)
+elastic_pipeline.fit(X_train, y_train)
+```
+
+
+```{python}
+model_elastic = elastic_pipeline.named_steps["elastic_net"]
+feature_names = elastic_pipeline[:-1].get_feature_names_out()
+coefficients = model_elastic.coef_
+elastic_coef_df = pd.DataFrame({
+    'predictor': feature_names,
+    'coefficient': coefficients
+})
+elastic_coef_df = elastic_coef_df.sort_values(by='coefficient', ascending=False)
+
+elastic_coef_df
+```
+
+```{python}
+elastic_pipeline
+
+elastic_pipeline_fitted = elastic_pipeline.fit(X_train, y_train)
+
+y_preds = elastic_pipeline_fitted.predict(X_test)
+
+mse4 = mean_squared_error(y_test, y_preds)
+mse4
+scores = cross_val_score(elastic_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from test train split: {mse4}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+<span style="color: red;">
+The best model based on the Cross Validated MSE was the 5 variable with interaction Ridge model. 
+</span>
+
+
+# Part 3
+## A 
+<span style="color: red;">
+The coefficients for the model with less variables were lower. This makes sense as the idea with Ridge is to penalize large coefficient values. 
+</span>
+
+## B
+<span style="color: red;">
+I got different tuning results. This makes sense as I would expect with different sets of predicter variables, different alpha values would best fit the model. I also got differnt MSEs. This is what I would expect as with differnt predictor variables, the Lasso penalty would lead to differnt MSE. 
+</span>
+
+
+## C
+<span style="color: red;">
+MSE's were consistently lower for the Elastic Models. ALthough the lowest Cross Validated MSE I got was from a Ridge model. This makes sense that Elastic Net always wins becasue it is tuning on both ridge and lasso. This is getting the best of both worlds.  
+</span>
+
+# Part 4
+<span style="color: red;">
+Again, based on the Cross Validated MSE our best model was the one with the top 5 numerical variables and the interaction with the 1 best categorical variable. This model has a MSE of 96682.42.
+</span>
+
+
+
+```{python}
+X_p2 = X[["CRuns", "Walks", "AtBat", "CHits", "Years", "Division"]]
+y = df_clean['Salary']
+```
+
+```{python}
+ct = ColumnTransformer(
+  [("dummify", OneHotEncoder(sparse_output = False), ["Division"]),
+    ("standardize", StandardScaler(), ["CRuns", "Walks", "AtBat", "CHits", "Years"])],
+  remainder = "passthrough"
+)
+
+ridge_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("ridge_regression", Ridge(alpha=1))]
+)
+
+ridge_pipeline_fitted = ridge_pipeline.fit(X_p2, y)
+
+y_preds = ridge_pipeline_fitted.predict(X_p2)
+
+mse2 = mean_squared_error(y, y_preds)
+mse2
+scores = cross_val_score(ridge_pipeline, X_p2, y, cv = 5, scoring = 'neg_mean_squared_error')
+print(f"MSE from All Data: {mse2}")
+print(f"Cross Validated MSE estimate: {-scores.mean()}")
+```
+
+```{python}
+from plotnine import *
+
+df_plot = pd.DataFrame({
+    'Actual': y,
+    'Predicted': y_preds
+})
+
+(ggplot(df_plot, aes(x='Actual', y='Predicted')) 
+    + geom_point(alpha=0.6, color='steelblue') 
+    + geom_abline(intercept=0, slope=1, color='red', linetype='dashed') 
+    + geom_smooth(method='lm', color='darkgreen', se=False, size=1) 
+    + labs(
+        title='Actual vs Predicted Salary',
+        x='Actual Salary',
+        y='Predicted Salary'
+    ))
+```
+
+<span style="color: red;">
+Based on the Cross Validated MSE our best model was the Ridge model with the top 5 numerical variables and the interaction with the 1 best categorical variable. This model has a MSE of 96682.42. After fitting the model on all the data, this model has a MSE of 112683.53, with the Cross Validated MSE being 125783.
+</span>
+
+<span style="color: red;">
+This graph shows the predictions vs actual salary. The green line shows the slope, the red line shows a y=x line indicating perfect predictions. The fact that my prediction slope is similar shape but not exactly the same as the y=x line means my model is decent but not perfect. 
+</span>
