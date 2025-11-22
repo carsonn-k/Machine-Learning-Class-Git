@@ -18,7 +18,7 @@ from sklearn.metrics import r2_score
 from sklearn.model_selection import cross_val_score
 import pandas as pd
 from sklearn.pipeline import make_pipeline
-from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
 pd.options.display.float_format = '{:.2f}'.format
 
 ```
