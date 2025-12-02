@@ -1,0 +1,699 @@
+---
+title: "Lab 8"
+format:
+  html:
+    embed-resources: true
+code-fold: false
+toc: true
+---
+
+```{python}
+import pandas as pd
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.metrics import confusion_matrix, f1_score
+import numpy as np
+from sklearn.model_selection import cross_val_score
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+```
+
+```{python}
+df = pd.read_csv("https://www.dropbox.com/s/s2a1uoiegitupjc/cannabis_full.csv?dl=1")
+df.dropna(inplace=True)
+
+```
+
+# Part 1
+```{python}
+df_p1 = df[df["Type"].isin(["sativa", "indica"])].copy()
+
+X = df_p1.drop(columns=['Type', 'Strain', 'Effects', 'Flavor'])
+y = df_p1['Type']
+
+df_p1['Type'].value_counts()
+```
+
+I am choosing f1_macro as my metric due to the fact that it disregards the number of each type
+
+## Q1 LDA
+```{python}
+lda_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("lda", LinearDiscriminantAnalysis())]
+)
+
+params_lda = {
+    "lda__solver": ['lsqr'],
+    "lda__shrinkage": ['auto', None, 0.2, 0.4, 0.6, 0.8, 1]
+}
+
+grid_search = GridSearchCV(lda_model, params_lda, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_lda = grid_search.best_estimator_
+y_pred_lda = best_model_lda.predict(X)
+f1_score_lda = f1_score(y, y_pred_lda, average='macro')
+
+lda_scores = cross_val_score(best_model_lda, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_lda = np.mean(lda_scores)
+print(f"Cross Validated f1_macro score (LDA): {f1_cv_lda}")
+
+best_model_lda.fit(X, y)
+confusion_matrix(y, y_pred_lda)
+```
+
+## Q2 QDA
+```{python}
+qda_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("qda", QuadraticDiscriminantAnalysis())]
+)
+
+params_qda = {
+    'qda__reg_param': [0.01, 0.1, 0.3, 0.5, 0.7, 0.9],
+    'qda__store_covariance': [False, True]
+}
+
+grid_search = GridSearchCV(qda_model, params_qda, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_qda = grid_search.best_estimator_
+y_pred_qda = best_model_qda.predict(X)
+f1_score_qda = f1_score(y, y_pred_qda, average='macro')
+
+qda_scores = cross_val_score(best_model_qda, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_qda = np.mean(qda_scores)
+print(f"Cross Validated f1_macro score (QDA): {f1_cv_qda}")
+
+best_model_qda.fit(X, y)
+confusion_matrix(y, y_pred_qda)
+```
+
+## Q3 SVC
+```{python}
+svc_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("svc", SVC(kernel="linear"))]
+)
+
+params_svc = {
+    "svc__C": [0.1, 1, 10, 100],
+    "svc__gamma": ['scale', 'auto']
+}
+
+grid_search = GridSearchCV(svc_model, params_svc, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_svc = grid_search.best_estimator_
+y_pred_svc = best_model_svc.predict(X)
+f1_score_svc = f1_score(y, y_pred_svc, average='macro')
+
+svc_scores = cross_val_score(best_model_svc, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_svc = np.mean(svc_scores)
+print(f"Cross Validated f1_macro score (SVC): {f1_cv_svc}")
+
+best_model_svc.fit(X, y)
+confusion_matrix(y, y_pred_svc)
+```
+
+## Q4 SVM
+```{python}
+svm_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("svc", SVC(kernel="poly"))]
+)
+
+params_svm = {
+    "svc__C": [0.1, 1, 10, 100],
+    "svc__degree": [2, 3, 5, 10],
+    "svc__gamma": ['scale', 'auto']
+}
+
+grid_search = GridSearchCV(svm_model, params_svm, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_svm = grid_search.best_estimator_
+y_pred_svm = best_model_svm.predict(X)
+f1_score_svm = f1_score(y, y_pred_svm, average='macro')
+
+svm_scores = cross_val_score(best_model_svm, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_svm = np.mean(svm_scores)
+print(f"Cross Validated f1_macro score (SVM): {f1_cv_svm}")
+
+best_model_svm.fit(X, y)
+confusion_matrix(y, y_pred_svm)
+```
+
+Based on the cross validated f1_macro scores, the LDA model was the best
+
+# Part 2
+```{python}
+X = df.drop(columns=['Type', 'Strain', 'Effects', 'Flavor'])
+y = df['Type']
+```
+
+## Q1 Tree
+
+```{python}
+from sklearn.tree import DecisionTreeClassifier
+
+tree_pipeline = Pipeline(
+  [("standardize", StandardScaler()),
+  ("tree", DecisionTreeClassifier())]
+)
+
+tree_pipeline
+
+tree_pipeline_fitted = tree_pipeline.fit(X, y)
+
+y_preds_tree = tree_pipeline_fitted.predict(X)
+
+param_grid_tree = {
+    "tree__max_depth": [1, 3, 7, 9],
+    'tree__min_samples_leaf': [1, 2, 4, 6, 8],
+    'tree__criterion': ['gini', 'entropy', 'log_loss']
+    }
+
+grid_search = GridSearchCV(tree_pipeline, param_grid_tree, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+# tree_df_cv_results_ = pd.DataFrame(tree_grid_search_fitted.cv_results_)
+
+best_model_tree = grid_search.best_estimator_
+y_pred_tree = best_model_tree.predict(X)
+f1_score_tree = f1_score(y, y_pred_tree, average='macro')
+
+
+tree_scores = cross_val_score(best_model_tree, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_tree = np.mean(tree_scores)
+print(f"Cross Validated f1_macro score (Tree): {f1_cv_tree}")
+
+best_model_tree.fit(X, y)
+confusion_matrix(y, y_pred_tree)
+```
+
+
+```{python}
+best_tree = grid_search.best_estimator_.named_steps['tree']
+
+from sklearn.tree import plot_tree
+
+plot_tree(best_tree)
+```
+
+The decision tree has 3 splits based on a number of the perdictor variables. This gives us 4 layers of the tree with 8 leaf nodes. The most important predictor is at the top (column 13). This is the sleepy column. Column 5 is relaxed which is another significant predictor. 
+
+## Q2 LDA
+```{python}
+lda_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("lda", LinearDiscriminantAnalysis())]
+)
+
+params_lda = {
+    "lda__solver": ['lsqr'],
+    "lda__shrinkage": ['auto', None, 0.2, 0.4, 0.6, 0.8, 1]
+}
+
+grid_search = GridSearchCV(lda_model, params_lda, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_lda = grid_search.best_estimator_
+y_pred_lda = best_model_lda.predict(X)
+f1_score_lda = f1_score(y, y_pred_lda, average='macro')
+
+lda_scores = cross_val_score(best_model_lda, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_lda = np.mean(lda_scores)
+print(f"Cross Validated f1_macro score (LDA): {f1_cv_lda}")
+
+best_model_lda.fit(X, y)
+confusion_matrix(y, y_pred_lda)
+```
+
+## Q2 QDA
+```{python}
+qda_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("qda", QuadraticDiscriminantAnalysis())]
+)
+
+params_qda = {
+    'qda__reg_param': [0.01, 0.1, 0.3, 0.5, 0.7, 0.9],
+    'qda__store_covariance': [False, True]
+}
+
+grid_search = GridSearchCV(qda_model, params_qda, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_qda = grid_search.best_estimator_
+y_pred_qda = best_model_qda.predict(X)
+f1_score_qda = f1_score(y, y_pred_qda, average='macro')
+
+qda_scores = cross_val_score(best_model_qda, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_qda = np.mean(qda_scores)
+print(f"Cross Validated f1_macro score (QDA): {f1_cv_qda}")
+
+best_model_qda.fit(X, y)
+confusion_matrix(y, y_pred_qda)
+```
+
+## Q2 KNN
+```{python}
+from sklearn.neighbors import KNeighborsClassifier
+
+knn_pipeline = Pipeline(
+  [("standardize", StandardScaler()),
+  ("knn", KNeighborsClassifier())]
+)
+
+knn_pipeline_fitted = knn_pipeline.fit(X, y)
+
+y_preds_knn = knn_pipeline_fitted.predict(X)
+
+param_grid_knn = {
+    'knn__n_neighbors': [3, 5, 7, 9, 11],
+    'knn__weights': ['uniform', 'distance'],
+    'knn__metric': ['euclidean', 'manhattan']
+}
+
+grid_search = GridSearchCV(knn_pipeline, param_grid_knn, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_knn = grid_search.best_estimator_
+y_pred_knn = best_model_knn.predict(X)
+f1_score_knn = f1_score(y, y_pred_knn, average='macro')
+
+knn_scores = cross_val_score(best_model_knn, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_knn = np.mean(knn_scores)
+print(f"Cross Validated f1_macro score (KNN): {f1_cv_knn}")
+
+best_model_knn.fit(X, y)
+confusion_matrix(y, y_pred_knn)
+```
+
+```{python}
+from sklearn.model_selection import cross_val_predict
+
+y_pred_cv_knn = cross_val_predict(best_model_knn, X, y, cv=5)
+confusion_matrix(y, y_pred_cv_knn)
+```
+
+I decided to plot the confusion matric on a cross valuated version of the predictions too. Due to the nature of knn, when cross valudating on f1 score the model was predicting with an abnormally high accuracy with a normal f1 score. 
+
+# Part 3
+## Q1
+
+```{python}
+y_indica = (y == 'indica').astype(int)
+y_hybrid = (y == 'hybrid').astype(int)
+y_sativa = (y == 'sativa').astype(int)
+```
+
+
+```{python}
+indica_lr_model = Pipeline(
+    [("scale", StandardScaler()),
+    ("logistic_regression", LogisticRegression())]
+)
+
+param_grid_log = {
+    'logistic_regression__C': [0.01, 0.1, 1, 10, 100]
+}
+
+grid_search = GridSearchCV(indica_lr_model, param_grid_log, cv=5, scoring='f1_macro')
+grid_search.fit(X, y_indica)
+
+best_model_lr_indica = grid_search.best_estimator_
+y_pred_lr_indica = best_model_lr_indica.predict(X)
+f1_score_lr_indica = f1_score(y_indica, y_pred_lr_indica, average='macro')
+
+indica_lr_scores = cross_val_score(best_model_lr_indica, X, y_indica, cv = 5, scoring = 'f1_macro')
+
+f1_cv_lr_indica = np.mean(indica_lr_scores)
+print(f"Cross Validated f1_macro score (Indica lr): {f1_cv_lr_indica}")
+
+best_model_lr_indica.fit(X, y_indica)
+confusion_matrix(y_indica, y_pred_lr_indica)
+```
+
+```{python}
+hybrid_lr_model = Pipeline(
+    [("scale", StandardScaler()),
+    ("logistic_regression", LogisticRegression())]
+)
+
+param_grid_log = {
+    'logistic_regression__C': [0.01, 0.1, 1, 10, 100]
+}
+
+grid_search = GridSearchCV(hybrid_lr_model, param_grid_log, cv=5, scoring='f1_macro')
+grid_search.fit(X, y_hybrid)
+
+best_model_lr_hybrid = grid_search.best_estimator_
+y_pred_lr_hybrid = best_model_lr_hybrid.predict(X)
+f1_score_lr_hybrid = f1_score(y_hybrid, y_pred_lr_hybrid, average='macro')
+
+hybrid_lr_scores = cross_val_score(best_model_lr_hybrid, X, y_hybrid, cv = 5, scoring = 'f1_macro')
+
+f1_cv_lr_hybrid = np.mean(hybrid_lr_scores)
+print(f"Cross Validated f1_macro score (hybrid lr): {f1_cv_lr_hybrid}")
+
+best_model_lr_hybrid.fit(X, y_hybrid)
+confusion_matrix(y_hybrid, y_pred_lr_hybrid)
+```
+
+```{python}
+sativa_lr_model = Pipeline(
+    [("scale", StandardScaler()),
+    ("logistic_regression", LogisticRegression())]
+)
+
+param_grid_log = {
+    'logistic_regression__C': [0.01, 0.1, 1, 10, 100]
+}
+
+grid_search = GridSearchCV(sativa_lr_model, param_grid_log, cv=5, scoring='f1_macro')
+grid_search.fit(X, y_sativa)
+
+best_model_lr_sativa = grid_search.best_estimator_
+y_pred_lr_sativa = best_model_lr_sativa.predict(X)
+f1_score_lr_sativa = f1_score(y_sativa, y_pred_lr_sativa, average='macro')
+
+sativa_lr_scores = cross_val_score(best_model_lr_sativa, X, y_sativa, cv = 5, scoring = 'f1_macro')
+
+f1_cv_lr_sativa = np.mean(sativa_lr_scores)
+print(f"Cross Validated f1_macro score (sativa lr): {f1_cv_lr_sativa}")
+
+best_model_lr_sativa.fit(X, y_sativa)
+confusion_matrix(y_sativa, y_pred_lr_sativa)
+```
+
+```{python}
+indica_svc_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("svc", SVC())]
+)
+
+params_svc = {
+    "svc__C": [0.1, 1, 10, 100],
+    "svc__degree": [2, 3, 5, 10],
+    "svc__gamma": ['scale', 'auto']
+}
+
+grid_search = GridSearchCV(indica_svc_model, params_svc, cv=5, scoring='f1_macro')
+grid_search.fit(X, y_indica)
+
+best_model_svc_indica = grid_search.best_estimator_
+y_pred_svc_indica = best_model_svc_indica.predict(X)
+f1_score_svc_indica = f1_score(y_indica, y_pred_svc_indica, average='macro')
+
+indica_svc_scores = cross_val_score(best_model_svc_indica, X, y_indica, cv = 5, scoring = 'f1_macro')
+
+f1_cv_svc_indica = np.mean(indica_svc_scores)
+print(f"Cross Validated f1_macro score (indica svc): {f1_cv_svc_indica}")
+
+best_model_svc_indica.fit(X, y_indica)
+confusion_matrix(y_indica, y_pred_svc_indica)
+```
+
+```{python}
+hybrid_svc_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("svc", SVC())]
+)
+
+params_svc = {
+    "svc__C": [0.1, 1, 10, 100],
+    "svc__degree": [2, 3, 5, 10],
+    "svc__gamma": ['scale', 'auto']
+}
+
+grid_search = GridSearchCV(hybrid_svc_model, params_svc, cv=5, scoring='f1_macro')
+grid_search.fit(X, y_hybrid)
+
+best_model_svc_hybrid = grid_search.best_estimator_
+y_pred_svc_hybrid = best_model_svc_hybrid.predict(X)
+f1_score_svc_hybrid = f1_score(y_hybrid, y_pred_svc_hybrid, average='macro')
+
+hybrid_svc_scores = cross_val_score(best_model_svc_hybrid, X, y_hybrid, cv = 5, scoring = 'f1_macro')
+
+f1_cv_svc_hybrid = np.mean(hybrid_svc_scores)
+print(f"Cross Validated f1_macro score (hybrid svc): {f1_cv_svc_hybrid}")
+
+best_model_svc_hybrid.fit(X, y_hybrid)
+confusion_matrix(y_hybrid, y_pred_svc_hybrid)
+```
+
+```{python}
+sativa_svc_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("svc", SVC())]
+)
+
+params_svc = {
+    "svc__C": [0.1, 1, 10, 100],
+    "svc__degree": [2, 3, 5, 10],
+    "svc__gamma": ['scale', 'auto']
+}
+
+grid_search = GridSearchCV(sativa_svc_model, params_svc, cv=5, scoring='f1_macro')
+grid_search.fit(X, y_sativa)
+
+best_model_svc_sativa = grid_search.best_estimator_
+y_pred_svc_sativa = best_model_svc_sativa.predict(X)
+f1_score_svc_sativa = f1_score(y_sativa, y_pred_svc_sativa, average='macro')
+
+sativa_svc_scores = cross_val_score(best_model_svc_sativa, X, y_sativa, cv = 5, scoring = 'f1_macro')
+
+f1_cv_svc_sativa = np.mean(sativa_svc_scores)
+print(f"Cross Validated f1_macro score (sativa svc): {f1_cv_svc_sativa}")
+
+best_model_svc_sativa.fit(X, y_sativa)
+confusion_matrix(y_sativa, y_pred_svc_sativa)
+```
+
+## Q2
+My Indica Logistic Model was the best with a cross validated F1_macro score of 0.75. My Hybrid SVC Model was the worst with a cross validated F1_macro score of 0.61.
+
+My two worst models were the hybrid ones, this intuitvly makes sense as I would expect a hybrid to have characteristics of both indica and sativa, making it harder to distinguish between the three. 
+
+
+## Q3
+```{python}
+df_ind_vs_sat = df[(df["Type"] == "indica") | (df["Type"] == "sativa")]
+X = df_ind_vs_sat.drop(columns=['Type', 'Strain', 'Effects', 'Flavor'])
+y = df_ind_vs_sat['Type']
+```
+
+```{python}
+ind_sat_lr_model = Pipeline(
+    [("scale", StandardScaler()),
+    ("logistic_regression", LogisticRegression())]
+)
+
+param_grid_log = {
+    'logistic_regression__C': [0.01, 0.1, 1, 10, 100]
+}
+
+grid_search = GridSearchCV(ind_sat_lr_model, param_grid_log, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_lr_ind_sat = grid_search.best_estimator_
+y_pred_lr_ind_sat = best_model_lr_ind_sat.predict(X)
+f1_score_lr_ind_sat = f1_score(y, y_pred_lr_ind_sat, average='macro')
+
+ind_sat_lr_scores = cross_val_score(best_model_lr_ind_sat, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_lr_ind_sat = np.mean(ind_sat_lr_scores)
+print(f"Cross Validated f1_macro score (indica vs sativa lr): {f1_cv_lr_ind_sat}")
+
+best_model_lr_ind_sat.fit(X, y)
+confusion_matrix(y, y_pred_lr_ind_sat)
+```
+
+```{python}
+df_ind_vs_sat = df[(df["Type"] == "hybrid") | (df["Type"] == "sativa")]
+X = df_ind_vs_sat.drop(columns=['Type', 'Strain', 'Effects', 'Flavor'])
+y = df_ind_vs_sat['Type']
+```
+```{python}
+hyb_sat_lr_model = Pipeline(
+    [("scale", StandardScaler()),
+    ("logistic_regression", LogisticRegression())]
+)
+
+param_grid_log = {
+    'logistic_regression__C': [0.01, 0.1, 1, 10, 100]
+}
+
+grid_search = GridSearchCV(hyb_sat_lr_model, param_grid_log, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_lr_hyb_sat = grid_search.best_estimator_
+y_pred_lr_hyb_sat = best_model_lr_hyb_sat.predict(X)
+f1_score_lr_hyb_sat = f1_score(y, y_pred_lr_hyb_sat, average='macro')
+
+hyb_sat_lr_scores = cross_val_score(best_model_lr_hyb_sat, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_lr_hyb_sat = np.mean(hyb_sat_lr_scores)
+print(f"Cross Validated f1_macro score (hybrid vs sativa lr): {f1_cv_lr_hyb_sat}")
+
+best_model_lr_hyb_sat.fit(X, y)
+confusion_matrix(y, y_pred_lr_hyb_sat)
+```
+
+```{python}
+df_ind_vs_sat = df[(df["Type"] == "indica") | (df["Type"] == "hybrid")]
+X = df_ind_vs_sat.drop(columns=['Type', 'Strain', 'Effects', 'Flavor'])
+y = df_ind_vs_sat['Type']
+```
+
+```{python}
+ind_hyb_lr_model = Pipeline(
+    [("scale", StandardScaler()),
+    ("logistic_regression", LogisticRegression())]
+)
+
+param_grid_log = {
+    'logistic_regression__C': [0.01, 0.1, 1, 10, 100]
+}
+
+grid_search = GridSearchCV(ind_hyb_lr_model, param_grid_log, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_lr_ind_hyb = grid_search.best_estimator_
+y_pred_lr_ind_hyb = best_model_lr_ind_hyb.predict(X)
+f1_score_lr_ind_hyb = f1_score(y, y_pred_lr_ind_hyb, average='macro')
+
+ind_hyb_lr_scores = cross_val_score(best_model_lr_ind_hyb, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_lr_ind_hyb = np.mean(ind_hyb_lr_scores)
+print(f"Cross Validated f1_macro score (hybrid vs indica lr): {f1_cv_lr_ind_hyb}")
+
+best_model_lr_ind_hyb.fit(X, y)
+confusion_matrix(y, y_pred_lr_ind_hyb)
+```
+
+```{python}
+df_ind_vs_sat = df[(df["Type"] == "indica") | (df["Type"] == "sativa")]
+X = df_ind_vs_sat.drop(columns=['Type', 'Strain', 'Effects', 'Flavor'])
+y = df_ind_vs_sat['Type']
+```
+
+```{python}
+ind_sat_svc_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("svc", SVC())]
+)
+
+params_svc = {
+    "svc__C": [0.1, 1, 10, 100],
+    "svc__degree": [2, 3, 5, 10],
+    "svc__gamma": ['scale', 'auto']
+}
+
+grid_search = GridSearchCV(ind_sat_svc_model, params_svc, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_svc_ind_sat = grid_search.best_estimator_
+y_pred_svc_ind_sat = best_model_svc_ind_sat.predict(X)
+f1_score_svc_ind_sat= f1_score(y, y_pred_svc_ind_sat, average='macro')
+
+ind_sat_svc_scores = cross_val_score(best_model_svc_ind_sat, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_svc_ind_sat = np.mean(ind_sat_svc_scores)
+print(f"Cross Validated f1_macro score (sativa vs indica svc): {f1_cv_svc_ind_sat}")
+
+best_model_svc_ind_sat.fit(X, y)
+confusion_matrix(y, y_pred_svc_ind_sat)
+```
+
+```{python}
+df_ind_vs_sat = df[(df["Type"] == "hybrid") | (df["Type"] == "sativa")]
+X = df_ind_vs_sat.drop(columns=['Type', 'Strain', 'Effects', 'Flavor'])
+y = df_ind_vs_sat['Type']
+```
+
+```{python}
+hyb_sat_svc_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("svc", SVC())]
+)
+
+params_svc = {
+    "svc__C": [0.1, 1, 10, 100],
+    "svc__degree": [2, 3, 5, 10],
+    "svc__gamma": ['scale', 'auto']
+}
+
+grid_search = GridSearchCV(hyb_sat_svc_model, params_svc, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_svc_hyb_sat = grid_search.best_estimator_
+y_pred_svc_hyb_sat = best_model_svc_hyb_sat.predict(X)
+f1_score_svc_hyb_sat = f1_score(y, y_pred_svc_hyb_sat, average='macro')
+
+hyb_sat_svc_scores = cross_val_score(best_model_svc_hyb_sat, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_svc_hyb_sat = np.mean(hyb_sat_svc_scores)
+print(f"Cross Validated f1_macro score (sativa vs hybrid svc): {f1_cv_svc_hyb_sat}")
+
+best_model_svc_hyb_sat.fit(X, y)
+confusion_matrix(y, y_pred_svc_hyb_sat)
+```
+
+
+```{python}
+df_ind_vs_sat = df[(df["Type"] == "indica") | (df["Type"] == "hybrid")]
+X = df_ind_vs_sat.drop(columns=['Type', 'Strain', 'Effects', 'Flavor'])
+y = df_ind_vs_sat['Type']
+```
+
+```{python}
+ind_hyb_svc_model = Pipeline(
+  [("standardize", StandardScaler()),
+  ("svc", SVC())]
+)
+
+params_svc = {
+    "svc__C": [0.1, 1, 10, 100],
+    "svc__degree": [2, 3, 5, 10],
+    "svc__gamma": ['scale', 'auto']
+}
+
+grid_search = GridSearchCV(ind_hyb_svc_model, params_svc, cv=5, scoring='f1_macro')
+grid_search.fit(X, y)
+
+best_model_svc_ind_hyb = grid_search.best_estimator_
+y_pred_svc_ind_hyb = best_model_svc_ind_hyb.predict(X)
+f1_score_svc_ind_hyb = f1_score(y, y_pred_svc_ind_hyb, average='macro')
+
+ind_hyb_svc_scores = cross_val_score(best_model_svc_ind_hyb, X, y, cv = 5, scoring = 'f1_macro')
+
+f1_cv_svc_ind_hyb = np.mean(ind_hyb_svc_scores)
+print(f"Cross Validated f1_macro score (hybrid vs indica svc): {f1_cv_svc_ind_hyb}")
+
+best_model_svc_ind_hyb.fit(X, y)
+confusion_matrix(y, y_pred_svc_ind_hyb)
+```
+
+## Q4
+The best model was the Logistic Regression model Indica vs Sativa with a F1_macro 0.85. 
+The worst model was the SVC model Hybrid vs Sativa with a F1_score of 0.61. 
+
+Again, this makes intuitive sense that its hard to distinguish between a hybrid and another type. It makese sense that the best model compares the two strains not indluding a hybrid. 
+
+## Q5
+Logistic Regression would be default OvR
+SVC would default to OvO
