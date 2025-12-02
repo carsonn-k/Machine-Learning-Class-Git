@@ -311,6 +311,9 @@ confusion_matrix(y, y_pred_cv_knn)
 
 I decided to plot the confusion matric on a cross valuated version of the predictions too. Due to the nature of knn, when cross valudating on f1 score the model was predicting with an abnormally high accuracy with a normal f1 score. 
 
+## Q3
+My results were better in Part 1. This is becasue the introduction of the hybrids. Hybrids are hard to classify correctly because they have characterists of both indica and sativa. The hybrids were the ones that were most frequently predicted incorrect, this again, is because hybrids have characterists of both making it hard for the model to correctly predict. 
+
 # Part 3
 ## Q1
 
