@@ -1,0 +1,205 @@
+---
+title: "Lab 6"
+format:
+  html:
+    embed-resources: true
+code-fold: false
+---
+# Part 1
+```{python}
+import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler, OneHotEncoder, PolynomialFeatures
+from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score
+from sklearn.model_selection import cross_val_score
+import pandas as pd
+from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline
+pd.options.display.float_format = '{:.2f}'.format
+from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import mean_squared_error
+import numpy as np
+from plotnine import *
+
+
+```
+```{python}
+df = pd.read_csv("train_new.csv")
+df.dropna(inplace=True)
+df
+```
+
+```{python}
+
+(ggplot(df, aes(x="SalePrice"))
+ + geom_histogram(bins=30, fill="steelblue", color="white")
+ + labs(title="Distribution of SalePrice",
+        x="SalePrice",
+        y="Count")
+ + theme_minimal()
+)
+
+```
+
+```{python}
+X = df.drop(columns=['SalePrice', 'PID'])
+y = np.log(df['SalePrice']) 
+# y = (df['SalePrice']) 
+
+```
+
+
+```{python}
+categorical_cols = X.select_dtypes(include=["object"]).columns
+numeric_cols = X.select_dtypes(exclude=["object"]).columns
+
+ct = ColumnTransformer(
+    [
+        ("dummify", OneHotEncoder(handle_unknown="ignore"), categorical_cols),
+        ("num", "passthrough", numeric_cols)
+    ]
+)
+```
+
+## Ridge
+```{python}
+ridge_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("ridge_regression", Ridge(alpha=1))]
+)
+from sklearn.model_selection import GridSearchCV
+
+alphas = {'ridge_regression__alpha': np.array([0.001, 0.01, 0.1, 1, 10])}
+gscv_ridge = GridSearchCV(ridge_pipeline, param_grid=alphas, cv = 5, scoring='neg_mean_squared_error')
+gscv_ridge.fit(X, y)
+
+best_ridge = gscv_ridge.best_estimator_
+y_preds_ridge_log = best_ridge.predict(X)
+y_preds_ridge = np.exp(y_preds_ridge_log)
+# best_ridge = gscv_ridge.best_estimator_
+# y_preds_ridge = best_ridge.predict(X)
+```
+
+
+```{python}
+mse2 = mean_squared_error(y, y_preds_ridge)
+mse2
+print(f"MSE: {mse2}")
+rmse2 = np.sqrt(mse2)
+rmse2
+
+best_cv_mse = -gscv_ridge.best_score_
+best_cv_rmse = np.sqrt(best_cv_mse)
+
+print("CV MSE:", best_cv_mse)
+print("CV RMSE:", best_cv_rmse)
+
+```
+
+
+##  Lasso
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+lasso_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("lasso_regression", Lasso(alpha=1))]
+)
+
+alphas = {'lasso_regression__alpha': np.array([100, 10, 1, 0.1, 0.01])}
+
+gscv_lasso = GridSearchCV(lasso_pipeline, param_grid=alphas, cv = 5, scoring='neg_mean_squared_error')
+gscv_fitted_lasso = gscv_lasso.fit(X, y)
+
+best_lasso = gscv_fitted_lasso.best_estimator_
+y_preds_lasso_log = best_lasso.predict(X)
+y_preds_lasso = np.exp(y_preds_lasso_log)
+
+# best_lasso = gscv_fitted_lasso.best_estimator_
+# y_preds_lasso = best_lasso.predict(X)
+```
+```{python}
+mse3 = mean_squared_error(y, y_preds_lasso)
+mse3
+print(f"MSE: {mse3}")
+rmse3 = np.sqrt(mse3)
+rmse3
+
+best_cv_mse = -gscv_lasso.best_score_
+best_cv_rmse = np.sqrt(best_cv_mse)
+
+print("CV MSE:", best_cv_mse)
+print("CV RMSE:", best_cv_rmse)
+```
+
+## Elastic
+```{python}
+#| warning: false
+#| error: false
+#| message: false
+
+
+elastic_pipeline = Pipeline(
+  [("preprocessing", ct),
+  ("elastic_net", ElasticNet(alpha=1, l1_ratio=0.5))]
+)
+
+param_grid = {
+    "elastic_net__alpha": [1, 10, 100],
+    "elastic_net__l1_ratio": np.arange(0.0, 1.2, 0.2),
+}
+
+gscv_elastic = GridSearchCV(elastic_pipeline, param_grid, cv = 5, scoring='neg_mean_squared_error')
+gscv_fitted_elastic = gscv_elastic.fit(X, y)
+
+best_elastic = gscv_fitted_elastic.best_estimator_
+y_preds_elastic_log = best_elastic.predict(X)
+y_preds_elastic = np.exp(y_preds_elastic_log)
+
+# best_elastic = gscv_fitted_elastic.best_estimator_
+# y_preds_elastic = best_elastic.predict(X)
+```
+
+```{python}
+mse4 = mean_squared_error(y, y_preds_elastic)
+mse4
+print(f"MSE: {mse4}")
+rmse4 = np.sqrt(mse4)
+rmse4
+
+best_cv_mse = -gscv_elastic.best_score_
+best_cv_rmse = np.sqrt(best_cv_mse)
+
+print("CV MSE:", best_cv_mse)
+print("CV RMSE:", best_cv_rmse)
+```
+
+
+## Print to CSV
+```{python}
+df_test = pd.read_csv("test_new.csv")
+df_test.dropna(inplace=True)
+X_final_test = df_test.drop(columns=["PID"])
+
+best_ridge_fitted = best_ridge.fit(X, y)
+y_pred_ridge_test_log = best_ridge_fitted.predict(X_final_test)
+y_pred_ridge_test = np.exp(y_pred_ridge_test_log)
+
+# best_ridge_fitted = best_ridge.fit(X, y)
+# y_pred_ridge_test = best_ridge_fitted.predict(X_final_test)
+```
+
+```{python}
+ridge_output = pd.DataFrame({
+    "PID": df_test["PID"],
+    "SalePrice": y_pred_ridge_test
+})
+
+ridge_output.to_csv("ridge predictions2.csv", index=False)
+```
